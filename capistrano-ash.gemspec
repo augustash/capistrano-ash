@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{capistrano-ash}
-  s.version = "0.0.1"
+  s.version = "0.0.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["August Ash"]
@@ -14,6 +14,15 @@ Gem::Specification.new do |s|
   s.email = %q{jake@augustash.com}
   s.extra_rdoc_files = [
     "README.textile"
+  ]
+  s.files = [
+    "README.textile",
+    "Rakefile",
+    "VERSION",
+    "capistrano-ash.gemspec",
+    "lib/ash/base.rb",
+    "lib/ash/common.rb",
+    "lib/ash/drupal.rb"
   ]
   s.homepage = %q{https://github.com/augustash/capistrano-ash}
   s.require_paths = ["lib"]
