@@ -2,7 +2,7 @@
 require 'rubygems'
 require 'railsless-deploy'
 require 'capistrano/ext/multistage'
-require 'capistrano/ash/common'
+require 'ash/common'
 
 configuration = Capistrano::Configuration.respond_to?(:instance) ?
   Capistrano::Configuration.instance(:must_exist) :

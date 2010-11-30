@@ -1,5 +1,5 @@
 # Require our base library.
-require 'capistrano/ash/base'
+require 'ash/base'
 
 configuration = Capistrano::Configuration.respond_to?(:instance) ?
   Capistrano::Configuration.instance(:must_exist) :
