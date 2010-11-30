@@ -13,10 +13,15 @@ configuration.load do
 # --------------------------------------------
 # Setting defaults
 # --------------------------------------------
-_cset :copy_exclude, [".svn", ".DS_Store", "*.sample", "LICENSE*", "Capfile", "config"]
-_cset :deploy_via, :remote_cache
-_cset :group_writable, false
-_cset :use_sudo, false
+set :copy_exclude, [".svn", ".DS_Store", "*.sample", "LICENSE*", "Capfile", "config"]
+set :deploy_via, :remote_cache
+set :group_writable, false
+set :use_sudo, false
+set :scm, :subversion
+set :scm_verbose, true
+
+# show password requests on windows (http://weblog.jamisbuck.org/2007/10/14/capistrano-2-1)
+default_run_options[:pty] = true
 
 # --------------------------------------------
 # Calling our Methods
