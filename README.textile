@@ -1,0 +1,5 @@
+The capistrano/ash/drupal library takes a hash of Drupal multisites in the following format.
+
+@set :multisites, {"default" => "mysite.com", "another" => "another.mysite.com"}@
+
+where each key is a folder in your @sites@ directory and each value is the URL of the multisite. If you are not using multisites, just exclude the @:multisites@ variable definition.
