@@ -7,7 +7,7 @@ require 'ash/common'
 configuration = Capistrano::Configuration.respond_to?(:instance) ?
   Capistrano::Configuration.instance(:must_exist) :
   Capistrano.configuration(:must_exist)
-  
+
 configuration.load do
 
 # --------------------------------------------
@@ -24,13 +24,8 @@ set :scm_verbose, true
 default_run_options[:pty] = true
 
 # --------------------------------------------
-# Calling our Methods
-# --------------------------------------------
-after "deploy:finalize_update", "ash:fixperms"
-
-# --------------------------------------------
 # Ash methods
-# --------------------------------------------       
+# --------------------------------------------
 namespace :ash do
     desc "Fix the permissions on Ash servers"
     task :fixperms, :except => { :no_release => true } do
@@ -38,7 +33,7 @@ namespace :ash do
         run "find #{latest_release} -type d -exec chmod 755 {} \\;"
         run "find #{latest_release} -type f -exec chmod 644 {} \\;"
     end
-    
+
     desc "Task for to test that Capistrano is working"
     task :uname do
         run "uname -a"
