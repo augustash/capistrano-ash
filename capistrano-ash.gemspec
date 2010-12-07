@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{capistrano-ash}
-  s.version = "0.0.3"
+  s.version = "0.0.4"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["August Ash"]
@@ -13,8 +13,10 @@ Gem::Specification.new do |s|
   s.description = %q{August Ash recipes for Capistrano}
   s.email = %q{jake@augustash.com}
   s.extra_rdoc_files = [
-    "README.textile"
+    "README.textile",
+    "CHANGELOG.rdoc"
   ]
+  s.rdoc_options = ["--line-numbers", "--inline-source", "--title", "Capistrano-ash", "README"]
   s.files = [
     "README.textile",
     "Rakefile",
@@ -22,12 +24,17 @@ Gem::Specification.new do |s|
     "capistrano-ash.gemspec",
     "lib/ash/base.rb",
     "lib/ash/common.rb",
-    "lib/ash/drupal.rb"
+    "lib/ash/drupal.rb",
+    "lib/ash/zend_doctrine.rb"
   ]
   s.homepage = %q{https://github.com/augustash/capistrano-ash}
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.7}
-  s.summary = %q{August Ash recipes for Capistrano}
+  s.summary = %q{Useful task libraries for August Ash recipes for Capistrano}
+  
+  s.add_dependency(%q<capistrano>, [">= 1.0.0"])
+  s.add_dependency(%q<capistrano-ext>, [">= 1.2.1"])
+  s.add_dependency(%q<railsless-deploy>, [">= 1.0.2"])
 
   if s.respond_to? :specification_version then
     current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION

@@ -1,8 +1,11 @@
+require 'rubygems'
+require 'rake'
+
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gemspec|
     gemspec.name = "capistrano-ash"
-    gemspec.summary = "August Ash recipes for Capistrano"
+    gemspec.summary = "Useful task libraries for August Ash recipes for Capistrano"
     gemspec.description = "August Ash recipes for Capistrano"
     gemspec.email = "jake@augustash.com"
     gemspec.homepage = "https://github.com/augustash/capistrano-ash"
