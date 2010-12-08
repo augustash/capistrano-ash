@@ -4,8 +4,8 @@ require 'railsless-deploy'
 require 'ash/common'
 
 # set default stages
-_cset :stages, %w(staging production)
-_cset :default_stge, "staging"
+set :stages, %w(staging production)
+set :default_stge, "staging"
 
 require 'capistrano/ext/multistage'
 
