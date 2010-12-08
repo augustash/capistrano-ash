@@ -1,6 +1,6 @@
 # set default stages
-set :stages, %w(staging production)
-set :default_stge, "staging"
+_cset :stages, %w(staging production)
+_cset :default_stge, "staging"
 
 # Required gems/libraries
 require 'rubygems'
