@@ -14,39 +14,38 @@ configuration = Capistrano::Configuration.respond_to?(:instance) ?
 
 configuration.load do
 
-# --------------------------------------------
-# Setting defaults
-# --------------------------------------------
-set :copy_exclude, [".svn", ".DS_Store", "*.sample", "LICENSE*", "Capfile", "config"]
-set :deploy_via, :remote_cache
-set :group_writable, false
-set :use_sudo, false
-set :scm, :subversion
-set :scm_verbose, true
+  # --------------------------------------------
+  # Setting defaults
+  # --------------------------------------------
+  set :copy_exclude, [".svn", ".DS_Store", "*.sample", "LICENSE*", "Capfile", "config", "REVISION"]
+  set :deploy_via, :remote_cache
+  set :group_writable, false
+  set :use_sudo, false
+  set :scm, :subversion
+  set :scm_verbose, true
 
-# show password requests on windows (http://weblog.jamisbuck.org/2007/10/14/capistrano-2-1)
-default_run_options[:pty] = true
+  # show password requests on windows (http://weblog.jamisbuck.org/2007/10/14/capistrano-2-1)
+  default_run_options[:pty] = true
 
-# --------------------------------------------
-# Ash methods
-# --------------------------------------------
-namespace :ash do
+  # --------------------------------------------
+  # Ash methods
+  # --------------------------------------------
+  namespace :ash do
     desc "Fix the permissions on Ash servers"
     task :fixperms, :except => { :no_release => true } do
-        # chmod the files and directories.
-        run "find #{latest_release} -type d -exec chmod 755 {} \\;"
-        run "find #{latest_release} -type f -exec chmod 644 {} \\;"
+      # chmod the files and directories.
+      run "find #{latest_release} -type d -exec chmod 755 {} \\;"
+      run "find #{latest_release} -type f -exec chmod 644 {} \\;"
     end
 
     desc "Task for to test that Capistrano is working"
     task :uname do
-        run "uname -a"
+      run "uname -a"
     end
 
     desc "Print environment of Capistrano user"
     task :getpath do
-        run "echo $PATH"
+      run "echo $PATH"
     end
-end
-
+  end
 end

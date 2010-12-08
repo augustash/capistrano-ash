@@ -50,17 +50,17 @@ configuration.load do
     task :symlink, :except => { :no_release => true } do
         run "ln -nfs #{shared_path}/var #{current_release}/var"
         run "ln -nfs #{shared_path}/system #{current_release}/public/system"
-        run "mv #{latest_release}/application/configs/application.ini.dist #{latest_release}/application/configs/application.ini"
-        run "mv #{latest_release}/application/Application.#{stage}.php #{latest_release}/application/Application.php"
-        run "mv #{latest_release}/public/htaccess.#{stage} #{latest_release}/public/.htaccess"
-        run "cp #{latest_release}/scripts/doctrine-cli.#{stage} #{latest_release}/scripts/doctrine-cli"
-        sudo "chmod +x #{latest_release}/scripts/doctrine-cli"
+        run "mv #{current_release}/application/configs/application.ini.dist #{current_release}/application/configs/application.ini"
+        run "mv #{current_release}/application/Application.#{stage}.php #{current_release}/application/Application.php"
+        run "mv #{current_release}/public/htaccess.#{stage} #{current_release}/public/.htaccess"
+        run "cp #{current_release}/scripts/doctrine-cli.#{stage} #{current_release}/scripts/doctrine-cli"
+        sudo "chmod +x #{current_release}/scripts/doctrine-cli"
         
         # remove the example or other environment example files
-        run "rm -f #{latest_release}/scripts/docrine-cli.dist"
-        run "rm -f #{latest_release}/scripts/docrine-cli.staging"
-        run "rm -f #{latest_release}/scripts/docrine-cli.production"
-        run "rm -f #{latest_release}/application/Application.example.php"
+        run "rm -f #{current_release}/scripts/docrine-cli.dist"
+        run "rm -f #{current_release}/scripts/docrine-cli.staging"
+        run "rm -f #{current_release}/scripts/docrine-cli.production"
+        run "rm -f #{current_release}/application/Application.example.php"
     end
   end
   
