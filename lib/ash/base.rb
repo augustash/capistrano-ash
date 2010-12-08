@@ -1,12 +1,13 @@
+# Required gems/libraries
+require 'rubygems'
+require 'railsless-deploy'
+require 'ash/common'
+
 # set default stages
 _cset :stages, %w(staging production)
 _cset :default_stge, "staging"
 
-# Required gems/libraries
-require 'rubygems'
-require 'railsless-deploy'
 require 'capistrano/ext/multistage'
-require 'ash/common'
 
 configuration = Capistrano::Configuration.respond_to?(:instance) ?
   Capistrano::Configuration.instance(:must_exist) :
