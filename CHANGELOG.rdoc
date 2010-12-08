@@ -2,7 +2,7 @@
 
 * Defined default stages and set the :default_stage variable to "staging"
 * Added an example Capfile for deploying Zend or Zend/Doctrine applications
-
+* Added the default deploy_to file path and set our backup_to variable
 
 == 0.0.4 (December 7, 2010)
 
