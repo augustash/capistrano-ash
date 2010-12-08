@@ -1,3 +1,7 @@
+== 0.0.11 (December 8, 2010)
+
+* Fixed some of my "uh-oh" moments and debugged the ash/base.rb and ash/zend_doctrine.rb files
+
 == 0.0.5 (December 8, 2010)
 
 * Defined default stages and set the :default_stage variable to "staging"
