@@ -6,19 +6,12 @@ configuration = Capistrano::Configuration.respond_to?(:instance) ?
   Capistrano.configuration(:must_exist)
 
 configuration.load do
-
-  # --------------------------------------------
-  # Setting defaults
-  # --------------------------------------------
-  # _cset :multisites, {"default" => "default"}
-
   # --------------------------------------------
   # Calling our Methods
   # --------------------------------------------
   after "deploy:setup", "deploy:setup_shared"
   after "deploy:finalize_update", "ash:fixperms"
   after "deploy:symlink", "zend:symlink"
-  after "zend:symlink", "zend:set_environment"
   after "deploy", "deploy:cleanup"
 
   # --------------------------------------------
@@ -49,16 +42,10 @@ configuration.load do
         run "ln -nfs #{shared_path}/var #{current_release}/var"
         run "ln -nfs #{shared_path}/system #{current_release}/public/system"
         run "mv #{latest_release}/application/configs/application.ini.dist #{latest_release}/application/configs/application.ini"
+        run "mv #{latest_release}/application/Application.#{stage}.php #{latest_release}/application/Application.php"
         run "mv #{latest_release}/public/htaccess.#{stage} #{latest_release}/public/.htaccess"
         run "cp #{latest_release}/scripts/doctrine-cli.#{stage} #{latest_release}/scripts/doctrine-cli"
         sudo "chmod +x #{latest_release}/scripts/doctrine-cli"
-    end
-    
-    desc "Set proper environment variable in scripts"
-    task :set_environment, :roles => :web do
-      # run "perl -pi -e 's/\\\|environment\\\|/#{stage}/' #{latest_release}/public/.htaccess"
-      # run "perl -pi -e 's/\\\|environment\\\|/#{stage}/' #{latest_release}/scripts/doctrine-cli"
-      run "perl -pi -e 's/production/#{stage}/' #{latest_release}/application/Application.php"
     end
   end
   
