@@ -7,6 +7,15 @@ configuration = Capistrano::Configuration.respond_to?(:instance) ?
 
 configuration.load do
   # --------------------------------------------
+  # Set some defaults
+  # --------------------------------------------
+  # Deploy to file path
+  set(:deploy_to) { "/var/www/#{application}/#{stage}" }
+
+  # Define your backups directory
+  set(:backup_to) { "#{deploy_to}/backups/" }
+
+  # --------------------------------------------
   # Calling our Methods
   # --------------------------------------------
   after "deploy:setup", "deploy:setup_shared"
@@ -46,6 +55,12 @@ configuration.load do
         run "mv #{latest_release}/public/htaccess.#{stage} #{latest_release}/public/.htaccess"
         run "cp #{latest_release}/scripts/doctrine-cli.#{stage} #{latest_release}/scripts/doctrine-cli"
         sudo "chmod +x #{latest_release}/scripts/doctrine-cli"
+        
+        # remove the example or other environment example files
+        run "rm -f #{latest_release}/scripts/docrine-cli.dist"
+        run "rm -f #{latest_release}/scripts/docrine-cli.staging"
+        run "rm -f #{latest_release}/scripts/docrine-cli.production"
+        run "rm -f #{latest_release}/application/Application.example.php"
     end
   end
   
