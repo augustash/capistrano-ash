@@ -1,3 +1,7 @@
+# set default stages
+set :stages, %w(staging production)
+set :default_stge, "staging"
+
 # Required gems/libraries
 require 'rubygems'
 require 'railsless-deploy'

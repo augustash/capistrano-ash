@@ -1,3 +1,9 @@
+== 0.0.5 (December 8, 2010)
+
+* Defined default stages and set the :default_stage variable to "staging"
+* Added an example Capfile for deploying Zend or Zend/Doctrine applications
+
+
 == 0.0.4 (December 7, 2010)
 
 * Added dependencies to the the gemspec

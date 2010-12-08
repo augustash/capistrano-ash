@@ -1,5 +1,67 @@
+h2. Deploying Drupal example
+
 The capistrano/ash/drupal library takes a hash of Drupal multisites in the following format.
 
 @set :multisites, {"default" => "mysite.com", "another" => "another.mysite.com"}@
 
 where each key is a folder in your @sites@ directory and each value is the URL of the multisite. If you are not using multisites, just exclude the @:multisites@ variable definition.
+
+h2. Deploying Zend or Zend/Doctrine example
+
+<pre>
+  <code>
+    # Capfile
+    load 'deploy' if respond_to?(:namespace) # cap2 differentiator
+
+    # Define available stages
+    set :stages, %w(staging production)
+    set :default_stage, "staging"
+
+    # --------------------------------------------
+    # Define required Gems/libraries
+    # --------------------------------------------
+    require 'ash/zend_doctrine'
+
+    # --------------------------------------------
+    # Setting defaults
+    # --------------------------------------------
+    # IP-address or host's servername
+    role :app, "bestappever.com"
+    role :web, "bestappever.com"
+    role :db,  "bestappever.com", :primary => true
+
+    # Application settings.
+    set :application, "best_app_ever"
+
+    # VCS information.
+    set :repository, "https://svn.example.com/REPO/trunk"
+    set :scm_username, "SVN_USER"
+    set :scm_password, proc{Capistrano::CLI.password_prompt("Subversion password for '#{scm_username}':")}
+
+    # SSH login credentials
+    set :user, "SSH_USER"
+    set :password, proc{Capistrano::CLI.password_prompt("SSH password for '#{user}':")}
+
+    # --------------------------------------------
+    # Calling our Methods
+    # --------------------------------------------
+    after "deploy:setup_shared", "app:setup_shared"
+    after "zend:symlink", "app:symlink"
+
+    # --------------------------------------------
+    # Application Specific Custom Methods
+    # --------------------------------------------
+    namespace :app do
+      desc "Setup shared directories and permissions specific to the application"
+      task :setup_shared, :roles => :web, :except => { :no_release => true } do
+        run "mkdir -p #{shared_path}/media"
+        sudo "chmod -R 777 #{shared_path}/*"
+      end
+
+      desc "Symlink shared directories specific to the application"
+      task :symlink, :except => { :no_release => true } do
+        run "ln -nfs #{shared_path}/media #{current_release}/public/media"
+      end
+    end
+  </code>
+</pre>
