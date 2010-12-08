@@ -2,11 +2,6 @@
 require 'rubygems'
 require 'railsless-deploy'
 require 'ash/common'
-
-# set default stages
-set :stages, %w(staging production)
-set :default_stge, "staging"
-
 require 'capistrano/ext/multistage'
 
 configuration = Capistrano::Configuration.respond_to?(:instance) ?
@@ -14,6 +9,10 @@ configuration = Capistrano::Configuration.respond_to?(:instance) ?
   Capistrano.configuration(:must_exist)
 
 configuration.load do
+
+  # set default stages
+  set :stages, %w(staging production)
+  set :default_stge, "staging"
 
   # --------------------------------------------
   # Setting defaults
