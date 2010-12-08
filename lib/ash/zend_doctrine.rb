@@ -51,15 +51,15 @@ configuration.load do
         run "ln -nfs #{shared_path}/var #{current_release}/var"
         run "ln -nfs #{shared_path}/system #{current_release}/public/system"
         run "mv #{current_release}/application/configs/application.ini.dist #{current_release}/application/configs/application.ini"
-        run "mv #{current_release}/application/Application.#{stage}.php #{current_release}/application/Application.php"
+        run "ln -nfs #{current_release}/application/Application.#{stage}.php #{current_release}/application/Application.php"
         run "mv #{current_release}/public/htaccess.#{stage} #{current_release}/public/.htaccess"
         run "cp #{current_release}/scripts/doctrine-cli.#{stage} #{current_release}/scripts/doctrine-cli"
         sudo "chmod +x #{current_release}/scripts/doctrine-cli"
         
         # remove the example or other environment example files
-        run "rm -f #{current_release}/scripts/docrine-cli.dist"
-        run "rm -f #{current_release}/scripts/docrine-cli.staging"
-        run "rm -f #{current_release}/scripts/docrine-cli.production"
+        run "rm -f #{current_release}/scripts/doctrine-cli.dist"
+        run "rm -f #{current_release}/scripts/doctrine-cli.staging"
+        run "rm -f #{current_release}/scripts/doctrine-cli.production"
         run "rm -f #{current_release}/application/Application.example.php"
     end
   end
