@@ -8,11 +8,6 @@ configuration = Capistrano::Configuration.respond_to?(:instance) ?
 configuration.load do
 
   # --------------------------------------------
-  # Setting defaults
-  # --------------------------------------------
-  # _cset :multisites, {"default" => "default"}
-
-  # --------------------------------------------
   # Calling our Methods
   # --------------------------------------------
   after "deploy:setup", "deploy:setup_shared"
@@ -56,8 +51,6 @@ configuration.load do
     
     desc "Set proper environment variable in scripts"
     task :set_environment, :roles => :web do
-      # run "perl -pi -e 's/\\\|environment\\\|/#{stage}/' #{latest_release}/public/.htaccess"
-      # run "perl -pi -e 's/\\\|environment\\\|/#{stage}/' #{latest_release}/scripts/doctrine-cli"
       run "perl -pi -e 's/production/#{stage}/' #{latest_release}/application/Application.php"
     end
   end
