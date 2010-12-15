@@ -8,3 +8,10 @@ def _cset(name, *args, &block)
     set(name, *args, &block)
   end
 end
+
+# Prompts user entry
+# Params:
+# +prompt+
+def text_prompt(prompt="Value: ")
+  ui.ask(prompt) { |q| q.echo = true }
+end
