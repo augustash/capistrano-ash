@@ -10,12 +10,15 @@ configuration.load do
 # --------------------------------------------
 # Setting defaults
 # --------------------------------------------
-_cset :multisites, {"default" => "default"}
+proc{_cset( :multisites, {"default" => "#{application}"} )}
+set :drush_bin, "drush"
 
 # --------------------------------------------
 # Calling our Methods
 # --------------------------------------------
 after "deploy:setup", "deploy:setup_shared"
+after "deploy:finalize_update", "ash:fixperms"
+after "ash:fixperms", "drupal:protect"
 after "deploy:symlink", "drupal:symlink"
 after "deploy", "drupal:clearcache"
 after "deploy", "deploy:cleanup"
@@ -53,14 +56,14 @@ namespace :deploy do
         desc "Disable the application and show a message screen"
         task :disable do
             multisites.each_pair do |folder, url|
-                run "/usr/local/bin/drush -l #{url} -r #{latest_release} vset --yes site_offline 1"
+                run "#{drush_bin} -l #{url} -r #{latest_release} vset --yes site_offline 1"
             end
         end
 
         desc "Enable the application and remove the message screen"
         task :enable do
             multisites.each_pair do |folder, url|
-                run "/usr/local/bin/drush -l #{url} -r #{latest_release} vdel --yes site_offline"
+                run "#{drush_bin} -l #{url} -r #{latest_release} vdel --yes site_offline"
             end
         end
     end
@@ -75,23 +78,31 @@ namespace :drupal do
         multisites.each_pair do |folder, url|
             run "ln -nfs #{shared_path}/#{url}/files #{current_release}/sites/#{url}/files"
             run "ln -nfs #{latest_release}/sites/#{url}/settings.php.#{stage} #{latest_release}/sites/#{url}/settings.php"
-            run "/usr/local/bin/drush -l #{url} -r #{current_path} vset --yes file_directory_path sites/#{url}/files"
+            run "#{drush_bin} -l #{url} -r #{current_path} vset --yes file_directory_path sites/#{url}/files"
         end
    end
 
    desc "Replace local database paths with remote paths"
    task :updatedb, :except => { :no_release => true } do
        multisites.each_pair do |folder, url|
-           run "/usr/local/bin/drush -l #{url} -r #{current_path} sqlq \"UPDATE {files} SET filepath = REPLACE(filepath,'sites/#{folder}/files','sites/#{url}/files');\""
+           run "#{drush_bin} -l #{url} -r #{current_path} sqlq \"UPDATE {files} SET filepath = REPLACE(filepath,'sites/#{folder}/files','sites/#{url}/files');\""
        end
    end
 
     desc "Clear all Drupal cache"
     task :clearcache, :except => { :no_release => true } do
         multisites.each_pair do |folder, url|
-            run "/usr/local/bin/drush -l #{url} -r #{current_path} cache-clear all"
+            run "#{drush_bin} -l #{url} -r #{current_path} cache-clear all"
         end
     end
+    
+    desc "Protect system files"
+    task :protect, :except => { :no_release => true } do
+        multisites.each_pair do |folder, url|
+            run "chmod 644 #{latest_release}/sites/#{url}/settings.php*"
+        end
+    end
+    
 end
 
 end

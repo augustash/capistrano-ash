@@ -74,8 +74,8 @@ configuration.load do
     desc "Set standard permissions for Ash servers"
     task :fixperms, :except => { :no_release => true } do
       # chmod the files and directories.
-      run "find #{latest_release} -type d -exec chmod 755 {} \\;"
-      run "find #{latest_release} -type f -exec chmod 644 {} \\;"
+      sudo "find #{latest_release} -type d -exec chmod 755 {} \\;"
+      sudo "find #{latest_release} -type f -exec chmod 644 {} \\;"
     end
 
     desc "Test: Task used to verify Capistrano is working. Prints operating system name."
