@@ -13,5 +13,5 @@ end
 # Params:
 # +prompt+
 def text_prompt(prompt="Value: ")
-  ui.ask(prompt) { |q| q.echo = true }
+  Capistrano::CLI.ui.ask(prompt) { |q| q.echo = true }
 end
