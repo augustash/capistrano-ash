@@ -90,18 +90,28 @@ configuration.load do
     end
 
     desc "Watch Magento system log"
-    task :watch_logs, :except => { :no_release => true } do
-      stream("tail -f #{shared_path}/var/log/system.log")
+    task :watch_logs, :except => { :no_release => true } do      
+      run "tail -f #{shared_path}/var/log/system.log" do |channel, stream, data|
+        puts  # for an extra line break before the host name
+        puts "#{channel[:host]}: #{data}" 
+        break if stream == :err    
+      end
     end
 
     desc "Watch Magento exception log"
     task :watch_exceptions, :except => { :no_release => true } do
-      stream("tail -f #{shared_path}/var/log/exception.log")
+      run "tail -f #{shared_path}/var/log/exception.log" do |channel, stream, data|
+        puts  # for an extra line break before the host name
+        puts "#{channel[:host]}: #{data}" 
+        break if stream == :err    
+      end
     end
   end
 
   # --------------------------------------------
   # Custom tasks
   # --------------------------------------------
+
+  # update core_config_data; set value = "domain" where scope_id = 0 and path = "web/unsecure/base_url"
 
 end
