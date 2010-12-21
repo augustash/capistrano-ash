@@ -38,6 +38,9 @@ namespace :deploy do
     # remove shared directories
     run "rm -Rf #{latest_release}/uploads"
     run "rm -Rf #{latest_release}/wp-content/cache"
+    # Removing cruft files.
+    run "rm -Rf #{latest_release}/license.txt"
+    run "rm -Rf #{latest_release}/readme.html"
   end
 end
 
