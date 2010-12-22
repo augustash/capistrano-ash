@@ -57,7 +57,7 @@ namespace :wordpress do
   
   desc "Set URL in database"
   task :updatedb do
-    # Something here.
+    run "mysql -u #{dbuser} -p #{dbpass} #{dbname} -e 'UPDATE #{dbprefix}options SET option_value = \"#{application}\" WHERE option_name = \"siteurl\" OR option_name = \"home\"'"
   end
   
   desc "Protect system files"
