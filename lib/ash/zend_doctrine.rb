@@ -7,15 +7,6 @@ configuration = Capistrano::Configuration.respond_to?(:instance) ?
 
 configuration.load do
   # --------------------------------------------
-  # Set some defaults
-  # --------------------------------------------
-  # Deploy to file path
-  set(:deploy_to) { "/var/www/#{application}/#{stage}" }
-
-  # Define your backups directory
-  set(:backup_to) { "#{deploy_to}/backups/" }
-
-  # --------------------------------------------
   # Calling our Methods
   # --------------------------------------------
   after "deploy:setup", "deploy:setup_shared"
@@ -64,4 +55,11 @@ configuration.load do
     end
   end
   
+  namespace :doctrine do
+    desc "Run Doctrine Migrations"
+    task :migrate, :except => { :no_release => true } do
+      puts "Running Doctrine Migrations..."
+      run "cd #{current_release} && ./scripts/doctrine-cli migrate"
+    end
+  end
 end

@@ -18,11 +18,12 @@ configuration.load do
   # Set default stages
   set :stages, %w(staging production)
   set :default_stge, "staging"
-
+  
   # --------------------------------------------
   # Task chains
   # --------------------------------------------
   after "deploy:setup", "deploy:setup_shared"
+  after "deploy:setup_shared", "deploy:setup_backups"
   after "deploy", "deploy:cleanup"
 
   # --------------------------------------------
@@ -53,6 +54,13 @@ configuration.load do
   # phpMyAdmin version
   set :pma_version, "3.3.8"
 
+  # Backups Path
+  _cset(:backups_path) { File.join(deploy_to, "backups") }
+
+  # Define which files or directories you want to exclude from being backed up
+  _cset(:backup_exclude) { [] }
+  set :exclude_string, ''
+
   # show password requests on windows
   # (http://weblog.jamisbuck.org/2007/10/14/capistrano-2-1)
   default_run_options[:pty] = true
@@ -64,6 +72,11 @@ configuration.load do
     desc "Setup shared application directories and permissions after initial setup"
     task :setup_shared do
       puts "STUB: Setup"
+    end
+    
+    desc "Setup backup directory for database and web files"
+    task :setup_backup, :except => { :no_release => true } do
+      run "#{try_sudo} mkdir -p #{backups_path} && #{try_sudo} chmod g+w #{backups_path}"
     end
   end
 
@@ -137,18 +150,44 @@ configuration.load do
   namespace :backup do
     desc "Perform a backup of web and database files"
     task :default do
-      web
       db
+      web
     end
 
     desc "Perform a backup of web files"
     task :web, :roles => :web do
-      puts "STUB: Backing up web server"
+      puts "Backing up web files (user uploaded content and previous release)"
+      
+      if !backup_exclude.nil? && !backup_exclude.empty?
+        logger.debug "processing backup exclusions..."
+        backup_exclude.each do |pattern|
+          exclude_string << "--exclude '#{pattern}' "
+        end
+        logger.debug "Exclude string = #{exclude_string}"
+      end
+      
+      # Copy the previous release to the /tmp directory
+      logger.debug "Copying previous release to the /tmp/#{release_name} directory"
+      run "rsync -avzrtpL #{exclude_string} #{current_path}/ /tmp/#{release_name}/"
+      # create the tarball of the previous release
+      set :archive_name, "release_B4_#{release_name}.tar.gz"
+      logger.debug "Creating a Tarball of the previous release in #{backups_path}/#{archive_name}"
+      run "cd /tmp && tar -cvpf - ./#{release_name}/ | gzip -c --best > #{backups_path}/#{archive_name}"
+      
+      # remove the the temporary copy
+      logger.debug "Removing the tempory copy"
+      run "rm -rf /tmp/#{release_name}"
     end
 
     desc "Perform a backup of database files"
     task :db, :roles => :db do
-      puts "STUB: Backing up db server"
+      puts "Backing up the database now and putting dump file in the previous release directory"
+      # define the filename (include the current_path so the dump file will be within the dirrectory)
+      filename = "#{current_path}/#{dbname}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
+      # dump the database for the proper environment
+      run "mysqldump -u #{dbuser} -p #{dbname} | gzip -c --best > #{filename}" do |ch, stream, out|
+          ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
+      end
     end
   end
 

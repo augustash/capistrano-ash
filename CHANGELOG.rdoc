@@ -1,3 +1,18 @@
+== 0.0.15
+
+* Added doctrine:migrate method for the ash/zend_doctrine recipe
+* Finished the stubbed methods for backup:web and backup:db
+* Added the backups_path variable which should default to #{deploy_to}/backups
+* Added more examples to the README for the Zend_Doctrine recipe
+
+== 0.0.13
+
+* Jake added WordPress recipe 
+
+== 0.0.12
+
+* Pete added Magento recipe and more STUB methods
+
 == 0.0.11 (December 8, 2010)
 
 * Fixed some of my "uh-oh" moments and debugged the ash/base.rb and ash/zend_doctrine.rb files

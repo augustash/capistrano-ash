@@ -13,9 +13,11 @@ h2. Deploying Zend or Zend/Doctrine example
     # Capfile
     load 'deploy' if respond_to?(:namespace) # cap2 differentiator
 
-    # Define available stages
-    set :stages, %w(staging production)
-    set :default_stage, "staging"
+    # --------------------------------------------
+    # :applicaiton HAS TO BE DEFINED BEFORE
+    # REQUIRING 'ash/zend_doctrine' LIBRARY
+    # --------------------------------------------
+    set :application, "BEST_APP_EVER"
 
     # --------------------------------------------
     # Define required Gems/libraries
@@ -30,9 +32,6 @@ h2. Deploying Zend or Zend/Doctrine example
     role :web, "bestappever.com"
     role :db,  "bestappever.com", :primary => true
 
-    # Application settings.
-    set :application, "best_app_ever"
-
     # VCS information.
     set :repository, "https://svn.example.com/REPO/trunk"
     set :scm_username, "SVN_USER"
@@ -41,10 +40,22 @@ h2. Deploying Zend or Zend/Doctrine example
     # SSH login credentials
     set :user, "SSH_USER"
     set :password, proc{Capistrano::CLI.password_prompt("SSH password for '#{user}':")}
+    
+    # Deploy to file path
+    set(:deploy_to)  { "/var/www/#{application}/#{stage}" }
+
+    # Database credentials
+    set :dbuser, "DB_USER_NAME"
+
+    # Define which files or directories you want to exclude from being backed up
+    set(:backup_exclude) { [ "var/" ] }
+    
 
     # --------------------------------------------
     # Calling our Methods
     # --------------------------------------------
+    before "deploy:update_code", "deploy:setup_backup"
+    after "deploy:setup_backup", "backup"
     after "deploy:setup_shared", "app:setup_shared"
     after "zend:symlink", "app:symlink"
 
@@ -64,4 +75,23 @@ h2. Deploying Zend or Zend/Doctrine example
       end
     end
   </code>
+  
+  <code>
+    # config/deploy/staging.rb
+    # Database Name
+    set :dbname, "DB_NAME"
+
+    # Backups Path (/var/www/#{application}/staging/backups)
+    set :backups_path,  "#{deploy_to}/backups"
+  </code>
+
+  <code>
+    # config/deploy/production.rb
+    # Database Name
+    set :dbname, "DB_NAME"
+
+    # Backups Path (/var/www/#{application}/production/backups)
+    set :backups_path,  "#{deploy_to}/backups"
+  </code>
 </pre>
+
