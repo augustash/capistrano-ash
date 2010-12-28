@@ -8,6 +8,8 @@ where each key is a folder in your @sites@ directory and each value is the URL o
 
 h2. Deploying Zend or Zend/Doctrine example
 
+h3. Capfile
+
 <pre>
   <code>
     # Capfile
@@ -75,7 +77,11 @@ h2. Deploying Zend or Zend/Doctrine example
       end
     end
   </code>
-  
+</pre>
+
+h3. config/deploy/staging.rb
+
+<pre>
   <code>
     # config/deploy/staging.rb
     # Database Name
@@ -84,7 +90,11 @@ h2. Deploying Zend or Zend/Doctrine example
     # Backups Path (/var/www/#{application}/staging/backups)
     set :backups_path,  "#{deploy_to}/backups"
   </code>
+</pre>
 
+h3. config/deploy/production.rb
+
+<pre>
   <code>
     # config/deploy/production.rb
     # Database Name
@@ -94,4 +104,3 @@ h2. Deploying Zend or Zend/Doctrine example
     set :backups_path,  "#{deploy_to}/backups"
   </code>
 </pre>
-
