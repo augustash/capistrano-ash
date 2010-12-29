@@ -10,7 +10,7 @@ configuration.load do
 # --------------------------------------------
 # Setting defaults
 # --------------------------------------------
-set :uploads_dir, "wp-content/uploads"
+set :uploads_path, "wp-content/uploads"
 
 # --------------------------------------------
 # Calling our Methods
@@ -41,7 +41,7 @@ namespace :deploy do
   desc "[internal] Touches up the released code. This is called by update_code after the basic deploy finishes."
   task :finalize_update, :except => { :no_release => true } do
     # remove shared directories
-    run "rm -Rf #{latest_release}/#{uploads_dir}"
+    run "rm -Rf #{latest_release}/#{uploads_path}"
     run "rm -Rf #{latest_release}/wp-content/cache"
     # Removing cruft files.
     run "rm -Rf #{latest_release}/license.txt"
@@ -55,7 +55,7 @@ end
 namespace :wordpress do
   desc "Links the correct settings file"
   task :symlink do
-    run "ln -nfs #{shared_path}/uploads #{current_release}/#{uploads_dir}"
+    run "ln -nfs #{shared_path}/uploads #{current_release}/#{uploads_path}"
     run "ln -nfs #{shared_path}/cache #{current_release}/wp-content/cache"
     run "ln -nfs #{latest_release}/wp-config.php.#{stage} #{latest_release}/wp-config.php"
   end

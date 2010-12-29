@@ -69,6 +69,19 @@ namespace :deploy do
     end
 end
 
+namespace :backup do
+  desc "Perform a backup of database files"
+  task :db, :roles => :db do
+    puts "Backing up the database now and putting dump file in the previous release directory"
+    multisites.each_pair do |folder, url|
+      # define the filename (include the current_path so the dump file will be within the dirrectory)
+      filename = "#{current_path}/#{folder}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
+      # dump the database for the proper environment
+      run "#{drush_bin} -l #{url} -r #{current_path} sql-dump | gzip -c --best > #{filename}"
+    end
+  end
+end
+
 # --------------------------------------------
 # Drupal-specific methods
 # --------------------------------------------
