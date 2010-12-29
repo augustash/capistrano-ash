@@ -1,3 +1,7 @@
+== 0.0.16
+
+* Removed the extra 's' from the callback section that was supposed to call deploy:setup_backup
+
 == 0.0.15
 
 * Added doctrine:migrate method for the ash/zend_doctrine recipe
