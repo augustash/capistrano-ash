@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["August Ash"]
-  s.date = %q{2010-12-28}
+  s.date = %q{2010-12-29}
   s.description = %q{August Ash recipes for Capistrano}
   s.email = %q{jake@augustash.com}
   s.extra_rdoc_files = [
