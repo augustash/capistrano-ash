@@ -23,7 +23,7 @@ configuration.load do
   # Task chains
   # --------------------------------------------
   after "deploy:setup", "deploy:setup_shared"
-  after "deploy:setup_shared", "deploy:setup_backups"
+  after "deploy:setup_shared", "deploy:setup_backup"
   after "deploy", "deploy:cleanup"
 
   # --------------------------------------------
