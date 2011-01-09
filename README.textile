@@ -16,7 +16,7 @@ h3. Capfile
     load 'deploy' if respond_to?(:namespace) # cap2 differentiator
 
     # --------------------------------------------
-    # :applicaiton HAS TO BE DEFINED BEFORE
+    # :application HAS TO BE DEFINED BEFORE
     # REQUIRING 'ash/zend_doctrine' LIBRARY
     # --------------------------------------------
     set :application, "BEST_APP_EVER"
