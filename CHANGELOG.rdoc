@@ -1,3 +1,7 @@
+== 0.0.19
+
+* Added the backup:cleanup method to remove old backups from the servers. You can over-ride the number of kept backups with the :keep_backups variable (default is 10). Warning: this will permanently remove the backups from the server solely based on the timestamp.
+
 == 0.0.16
 
 * Removed the extra 's' from the callback section that was supposed to call deploy:setup_backup
