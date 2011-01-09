@@ -30,36 +30,41 @@ configuration.load do
   # Default variables
   # --------------------------------------------
   # SSH
-  set :user, proc{text_prompt("SSH username: ")}
-  set :password, proc{Capistrano::CLI.password_prompt("SSH password for '#{user}':")}
+  set :user,              proc{text_prompt("SSH username: ")}
+  set :password,          proc{Capistrano::CLI.password_prompt("SSH password for '#{user}':")}
 
   # Database
-  set :dbuser, proc{text_prompt("Database username: ")}
-  set :dbpass, proc{Capistrano::CLI.password_prompt("Database password for '#{dbuser}':")}
-  set :dbname, proc{text_prompt("Database name: ")}
+  set :dbuser,            proc{text_prompt("Database username: ")}
+  set :dbpass,            proc{Capistrano::CLI.password_prompt("Database password for '#{dbuser}':")}
+  set :dbname,            proc{text_prompt("Database name: ")}
 
   # Source Control
-  set :group_writable, false
-  set :use_sudo, false
-  set :scm, :subversion
-  set :scm_verbose, true
-  set :scm_username, proc{text_prompt("Subversion username: ")}
-  set :scm_password, proc{Capistrano::CLI.password_prompt("Subversion password for '#{scm_username}': ")}
-  set :keep_releases, 3
-  set :deploy_via, :remote_cache
-  set :copy_strategy, :checkout
-  set :copy_compression, :bz2
-  set :copy_exclude, [".svn", ".DS_Store", "*.sample", "LICENSE*", "Capfile",
+  set :group_writable,    false
+  set :use_sudo,          false
+  set :scm,               :subversion
+  set :scm_verbose,       true
+  set :scm_username,      proc{text_prompt("Subversion username: ")}
+  set :scm_password,      proc{Capistrano::CLI.password_prompt("Subversion password for '#{scm_username}': ")}
+  set :keep_releases,     3
+  set :deploy_via,        :remote_cache
+  set :copy_strategy,     :checkout
+  set :copy_compression,  :bz2
+  set :copy_exclude,      [".svn", ".DS_Store", "*.sample", "LICENSE*", "Capfile",
     "config", "*.rb", "*.sql", "nbproject", "_template"]
+
   # phpMyAdmin version
-  set :pma_version, "3.3.8"
+  set :pma_version,       "3.3.8"
 
   # Backups Path
-  _cset(:backups_path) { File.join(deploy_to, "backups") }
+  _cset(:backups_path)    { File.join(deploy_to, "backups") }
+  _cset(:backups)         { capture("ls -x #{backups_path}", :except => { :no_release => true }).split.sort }
 
   # Define which files or directories you want to exclude from being backed up
-  _cset(:backup_exclude) { [] }
-  set :exclude_string, ''
+  _cset(:backup_exclude)  { [] }
+  set :exclude_string,    ''
+
+  # Define the default number of backups to keep
+  set :keep_backups,      10
 
   # show password requests on windows
   # (http://weblog.jamisbuck.org/2007/10/14/capistrano-2-1)
@@ -187,6 +192,27 @@ configuration.load do
       # dump the database for the proper environment
       run "mysqldump -u #{dbuser} -p #{dbname} | gzip -c --best > #{filename}" do |ch, stream, out|
           ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
+      end
+    end
+    
+    desc <<-DESC
+      Clean up old backups. By default, the last 10 backups are kept on each \
+      server (though you can change this with the keep_backups variable). All \
+      other backups are removed from the servers. By default, this \
+      will use sudo to clean up the old backups, but if sudo is not available \
+      for your environment, set the :use_sudo variable to false instead.
+    DESC
+    task :cleanup, :except => { :no_release => true } do
+      count = fetch(:keep_backups, 10).to_i
+      if count >= backups.length
+        logger.important "no old backups to clean up"
+      else
+        logger.info "keeping #{count} of #{backups.length} backups"
+
+        archives = (backups - backups.last(count)).map { |backup|
+          File.join(backups_path, backup) }.join(" ")
+
+        try_sudo "rm -rf #{archives}"
       end
     end
   end
