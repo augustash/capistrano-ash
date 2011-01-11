@@ -135,7 +135,7 @@ h3. Capfile
 
     # VCS information.
     set :repository, "https://svn.example.com/REPO/trunk"
-    set :scm_username, "remotesvn"
+    set :scm_username, "SVN_USER"
     set :scm_password, proc{Capistrano::CLI.password_prompt("Subversion password for '#{scm_username}':")}
 
     # SSH login credentials
