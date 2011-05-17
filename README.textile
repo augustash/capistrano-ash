@@ -1,3 +1,7 @@
+h2. Deploying Magento
+
+Check the Wiki for detailed installation instructions.
+
 h2. Deploying Drupal example
 
 The capistrano/ash/drupal library takes a hash of Drupal multisites in the following format.
