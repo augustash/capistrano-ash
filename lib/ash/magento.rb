@@ -10,6 +10,7 @@ configuration.load do
   # --------------------------------------------
   # Task chains
   # --------------------------------------------
+  after "deploy:setup", "deploy:setup_local"
   after "deploy:setup_shared", "pma:install"
   after "deploy:finalize_update", "magento:activate_config"
   after "deploy:symlink", "magento:symlink"
@@ -19,6 +20,12 @@ configuration.load do
   # Overloaded tasks
   # --------------------------------------------
   namespace :deploy do
+    desc "Setup local files necessary for deployment"
+    task :setup_local do
+      # attempt to create files needed for proper deployment
+      system("touch app/etc/local.xml.staging app/etc/local.xml.production")
+    end
+    
     desc "Setup shared application directories and permissions after initial setup"
     task :setup_shared do
       # remove Capistrano specific directories
@@ -41,7 +48,7 @@ configuration.load do
       # synchronize media directory with shared data
       sudo "rsync -rltDvzog #{latest_release}/media/ #{shared_path}/media/"
       sudo "chmod -R 777 #{shared_path}/media/"
-
+      
       # remove directories that will be shared
       run "rm -Rf #{latest_release}/includes"
       run "rm -Rf #{latest_release}/media"
