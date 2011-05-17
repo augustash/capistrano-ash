@@ -1,6 +1,6 @@
 h2. Deploying Magento
 
-Check the "Wiki":http://github.com/capistrano/capistrano/wiki for detailed installation instructions.
+Check the "Wiki":https://github.com/augustash/capistrano-ash/wiki for detailed installation instructions.
 
 h2. Deploying Drupal example
 
