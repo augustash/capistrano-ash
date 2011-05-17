@@ -1,3 +1,7 @@
+== 1.0.0
+* Added the drupal:htaccess task for copying distributed .htaccess files
+* Added example Drupal Capfile and staging/production deployment files
+
 == 0.0.20
 
 * Added AAI-hosted Magento script
