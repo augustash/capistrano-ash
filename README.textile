@@ -1,5 +1,7 @@
 h2. Overview
 
+Run the following commands in the command line from the project's root directory
+
 <pre>
   <code>
     capify .
