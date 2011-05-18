@@ -1,3 +1,23 @@
+h2. Overview
+
+<pre>
+  <code>
+    capify .
+    rm -Rf config/deploy.rb; mkdir -p config/deploy
+    touch config/deploy/staging.rb config/deploy/production.rb
+  </code>
+</pre>
+
+After you have edited your @Capfile@ and @staging.rb@ and @production.rb@ files, you will need to run the following command only once per environment:
+
+<pre>
+  <code>
+      cap staging deploy:setup
+      cap production deploy:setup
+  </code>
+</pre>
+
+
 h2. Deploying Magento
 
 Check the "Wiki":https://github.com/augustash/capistrano-ash/wiki for detailed installation instructions.
