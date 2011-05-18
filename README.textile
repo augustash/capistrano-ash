@@ -12,8 +12,8 @@ After you have edited your @Capfile@ and @staging.rb@ and @production.rb@ files,
 
 <pre>
   <code>
-      cap staging deploy:setup
-      cap production deploy:setup
+    cap staging deploy:setup
+    cap production deploy:setup
   </code>
 </pre>
 
