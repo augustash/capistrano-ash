@@ -174,7 +174,7 @@ configuration.load do
       if previous_release
         puts "Backing up web files (user uploaded content and previous release)"
 
-        if backup_exclude.present?
+        if !backup_exclude.nil? && !backup_exclude.empty?
           logger.debug "processing backup exclusions..."
           backup_exclude.each do |pattern|
             exclude_string << "--exclude '#{pattern}' "
