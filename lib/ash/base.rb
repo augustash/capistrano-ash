@@ -200,12 +200,16 @@ configuration.load do
 
     desc "Perform a backup of database files"
     task :db, :roles => :db do
-      puts "Backing up the database now and putting dump file in the previous release directory"
-      # define the filename (include the current_path so the dump file will be within the directory)
-      filename = "#{current_path}/#{dbname}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
-      # dump the database for the proper environment
-      run "mysqldump -u #{dbuser} -p #{dbname} | gzip -c --best > #{filename}" do |ch, stream, out|
-          ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
+      if previous_release
+        puts "Backing up the database now and putting dump file in the previous release directory"
+        # define the filename (include the current_path so the dump file will be within the directory)
+        filename = "#{current_path}/#{dbname}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
+        # dump the database for the proper environment
+        run "mysqldump -u #{dbuser} -p #{dbname} | gzip -c --best > #{filename}" do |ch, stream, out|
+            ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
+        end
+      else
+        logger.important "no previous release to backup to; backup of database skipped"
       end
     end
     
