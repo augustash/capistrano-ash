@@ -1,5 +1,6 @@
 # Require our base library.
 require 'ash/base'
+require 'railsless-deploy'
 
 configuration = Capistrano::Configuration.respond_to?(:instance) ?
   Capistrano::Configuration.instance(:must_exist) :
@@ -31,13 +32,15 @@ configuration.load do
     desc "Setup shared application directories and permissions after initial setup"
     task :setup_shared, :roles => :web do
       # remove Capistrano specific directories
-      run "rm -Rf #{shared_path}/log"
-      run "rm -Rf #{shared_path}/pids"
-      run "rm -Rf #{shared_path}/system"
+      run<<-CMD
+        rm -Rf #{shared_path}/log &&
+        rm -Rf #{shared_path}/pids &&
+        rm -Rf #{shared_path}/system
+      CMD
 
       # create shared directories
       multisites.each_pair do |folder, url|
-          run "mkdir -p #{shared_path}/#{url}/files"
+        run "mkdir -p #{shared_path}/#{url}/files"
       end
 
       # set correct permissions
@@ -48,8 +51,8 @@ configuration.load do
     task :finalize_update, :except => { :no_release => true } do
       # remove shared directories
       multisites.each_pair do |folder, url|
-          run "mv #{latest_release}/sites/#{folder} #{latest_release}/sites/#{url}"
-          run "rm -Rf #{latest_release}/sites/#{url}/files"
+        run "mv #{latest_release}/sites/#{folder} #{latest_release}/sites/#{url}"
+        run "rm -Rf #{latest_release}/sites/#{url}/files"
       end
     end
 
@@ -75,7 +78,7 @@ configuration.load do
     task :db, :roles => :db do
       puts "Backing up the database now and putting dump file in the previous release directory"
       multisites.each_pair do |folder, url|
-        # define the filename (include the current_path so the dump file will be within the dirrectory)
+        # define the filename (include the current_path so the dump file will be within the directory)
         filename = "#{current_path}/#{folder}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
         # dump the database for the proper environment
         run "#{drush_bin} -l #{url} -r #{current_path} sql-dump | gzip -c --best > #{filename}"
@@ -90,9 +93,11 @@ configuration.load do
    desc "Symlink shared directories"
    task :symlink, :except => { :no_release => true } do
       multisites.each_pair do |folder, url|
-        run "ln -nfs #{shared_path}/#{url}/files #{current_release}/sites/#{url}/files"
-        run "ln -nfs #{latest_release}/sites/#{url}/settings.php.#{stage} #{latest_release}/sites/#{url}/settings.php"
-        run "#{drush_bin} -l #{url} -r #{current_path} vset --yes file_directory_path sites/#{url}/files"
+        run<<-CMD
+          ln -nfs #{shared_path}/#{url}/files #{latest_release}/sites/#{url}/files &&
+          ln -nfs #{latest_release}/sites/#{url}/settings.php.#{stage} #{latest_release}/sites/#{url}/settings.php &&
+          #{drush_bin} -l #{url} -r #{current_path} vset --yes file_directory_path sites/#{url}/files
+        CMD
       end
    end
 

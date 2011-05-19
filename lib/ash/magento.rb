@@ -1,5 +1,6 @@
 # Required base libraries
 require 'ash/base'
+require 'railsless-deploy'
 
 # Bootstrap Capistrano instance
 configuration = Capistrano::Configuration.respond_to?(:instance) ?
