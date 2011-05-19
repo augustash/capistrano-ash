@@ -60,7 +60,6 @@ namespace :wordpress do
     run "ln -nfs #{shared_path}/uploads #{current_release}/#{uploads_path}"
     run "ln -nfs #{shared_path}/cache #{current_release}/wp-content/cache"
     run "ln -nfs #{latest_release}/wp-config.php.#{stage} #{latest_release}/wp-config.php"
-    CMD
   end
   
   desc "Set URL in database"

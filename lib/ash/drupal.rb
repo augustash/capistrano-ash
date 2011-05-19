@@ -95,11 +95,9 @@ configuration.load do
    desc "Symlink shared directories"
    task :symlink, :except => { :no_release => true } do
       multisites.each_pair do |folder, url|
-        run<<-CMD
-          ln -nfs #{shared_path}/#{url}/files #{latest_release}/sites/#{url}/files &&
-          ln -nfs #{latest_release}/sites/#{url}/settings.php.#{stage} #{latest_release}/sites/#{url}/settings.php &&
-          #{drush_bin} -l #{url} -r #{current_path} vset --yes file_directory_path sites/#{url}/files
-        CMD
+        run "ln -nfs #{shared_path}/#{url}/files #{latest_release}/sites/#{url}/files"
+        run "ln -nfs #{latest_release}/sites/#{url}/settings.php.#{stage} #{latest_release}/sites/#{url}/settings.php"
+        run "#{drush_bin} -l #{url} -r #{current_path} vset --yes file_directory_path sites/#{url}/files"
       end
    end
 
