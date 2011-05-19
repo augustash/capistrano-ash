@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{capistrano-ash}
-  s.version = "1.0.0"
+  s.version = "1.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["August Ash"]
-  s.date = %q{2011-05-17}
+  s.date = %q{2011-05-19}
   s.description = %q{August Ash recipes for Capistrano}
   s.email = %q{jake@augustash.com}
   s.extra_rdoc_files = [
@@ -24,10 +24,13 @@ Gem::Specification.new do |s|
     "lib/ash/base.rb",
     "lib/ash/common.rb",
     "lib/ash/drupal.rb",
+    "lib/ash/drupal_shared_hosting.rb",
     "lib/ash/hosted_magento.rb",
     "lib/ash/magento.rb",
     "lib/ash/wordpress.rb",
-    "lib/ash/zend_doctrine.rb"
+    "lib/ash/wordpress_shared_hosting.rb",
+    "lib/ash/zend_doctrine.rb",
+    "lib/ash/zend_doctrine_shared_hosting.rb"
   ]
   s.homepage = %q{https://github.com/augustash/capistrano-ash}
   s.require_paths = ["lib"]
