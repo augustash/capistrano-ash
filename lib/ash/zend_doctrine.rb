@@ -22,13 +22,11 @@ configuration.load do
   namespace :deploy do
     desc "Setup shared directories and permissions after initial setup"
     task :setup_shared, :roles => :web, :except => { :no_release => true } do
-      run<<-CMD 
-        mkdir -p #{shared_path}/var &&
-        mkdir -p #{shared_path}/var/logs &&
-        mkdir -p #{shared_path}/var/cache && 
-        mkdir -p #{shared_path}/var/sessions &&
-        mkdir -p #{shared_path}/system
-      CMD
+      run "mkdir -p #{shared_path}/var"
+      run "mkdir -p #{shared_path}/var/logs"
+      run "mkdir -p #{shared_path}/var/cache"
+      run "mkdir -p #{shared_path}/var/sessions"
+      run "mkdir -p #{shared_path}/system"
       try_sudo "chmod -R 777 #{shared_path}/*"
     end
     
@@ -43,24 +41,21 @@ configuration.load do
   namespace :zend do
     desc "Symlink shared directories"
     task :symlink, :except => { :no_release => true } do
-      run<<-CMD
-        ln -nfs #{shared_path}/var #{current_release}/var &&
-        ln -nfs #{shared_path}/system #{current_release}/public/system &&
-        mv #{current_release}/application/configs/application.ini.dist #{current_release}/application/configs/application.ini &&
-        ln -nfs #{current_release}/application/Application.#{stage}.php #{current_release}/application/Application.php &&
-        mv #{current_release}/public/htaccess.#{stage} #{current_release}/public/.htaccess &&
-        cp #{current_release}/scripts/doctrine-cli.#{stage} #{current_release}/scripts/doctrine-cli
-      CMD
+      run "ln -nfs #{shared_path}/var #{current_release}/var"
+      run "ln -nfs #{shared_path}/system #{current_release}/public/system"
+      run "mv #{current_release}/application/configs/application.ini.dist #{current_release}/application/configs/application.ini"
+      run "ln -nfs #{current_release}/application/Application.#{stage}.php #{current_release}/application/Application.php"
+      run "mv #{current_release}/public/htaccess.#{stage} #{current_release}/public/.htaccess"
+      run "cp #{current_release}/scripts/doctrine-cli.#{stage} #{current_release}/scripts/doctrine-cli"
+      
       
       try_sudo "chmod +x #{current_release}/scripts/doctrine-cli"
       
       # remove the example or other environment example files
-      run<<-CMD
-        rm -f #{current_release}/scripts/doctrine-cli.dist &&
-        rm -f #{current_release}/scripts/doctrine-cli.staging &&
-        rm -f #{current_release}/scripts/doctrine-cli.production &&
-        rm -f #{current_release}/application/Application.example.php
-      CMD
+      run "rm -f #{current_release}/scripts/doctrine-cli.dist"
+      run "rm -f #{current_release}/scripts/doctrine-cli.staging"
+      run "rm -f #{current_release}/scripts/doctrine-cli.production"
+      run "rm -f #{current_release}/application/Application.example.php"
     end
   end
   

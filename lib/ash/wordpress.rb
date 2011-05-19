@@ -27,17 +27,14 @@ namespace :deploy do
   desc "Setup shared application directories and permissions after initial setup"
   task :setup_shared, :roles => :web do
     # remove Capistrano specific directories
-    run<<-CMD
-      rm -Rf #{shared_path}/log &&
-      rm -Rf #{shared_path}/pids &&
-      rm -Rf #{shared_path}/system
-    CMD
+    run "rm -Rf #{shared_path}/log"
+    run "rm -Rf #{shared_path}/pids"
+    run "rm -Rf #{shared_path}/system"
     
     # create shared directories
-    run<<-CMD
-      mkdir -p #{shared_path}/uploads &&
-      mkdir -p #{shared_path}/cache
-    CMD
+    run "mkdir -p #{shared_path}/uploads"
+    run "mkdir -p #{shared_path}/cache"
+
     # set correct permissions
     run "chmod -R 777 #{shared_path}/*"
   end
@@ -45,16 +42,12 @@ namespace :deploy do
   desc "[internal] Touches up the released code. This is called by update_code after the basic deploy finishes."
   task :finalize_update, :except => { :no_release => true } do
     # remove shared directories
-    run<<-CMD
-      rm -Rf #{latest_release}/#{uploads_path} &&
-      rm -Rf #{latest_release}/wp-content/cache
-    CMD
+    run "rm -Rf #{latest_release}/#{uploads_path}"
+    run "rm -Rf #{latest_release}/wp-content/cache"
     
     # Removing cruft files.
-    run<<-CMD
-      rm -Rf #{latest_release}/license.txt &&
-      rm -Rf #{latest_release}/readme.html
-    CMD
+    run "rm -Rf #{latest_release}/license.txt"
+    run "rm -Rf #{latest_release}/readme.html"
   end
 end
 
@@ -64,10 +57,9 @@ end
 namespace :wordpress do
   desc "Links the correct settings file"
   task :symlink do
-    run<<-CMD
-      ln -nfs #{shared_path}/uploads #{current_release}/#{uploads_path} &&
-      ln -nfs #{shared_path}/cache #{current_release}/wp-content/cache &&
-      ln -nfs #{latest_release}/wp-config.php.#{stage} #{latest_release}/wp-config.php
+    run "ln -nfs #{shared_path}/uploads #{current_release}/#{uploads_path}"
+    run "ln -nfs #{shared_path}/cache #{current_release}/wp-content/cache"
+    run "ln -nfs #{latest_release}/wp-config.php.#{stage} #{latest_release}/wp-config.php"
     CMD
   end
   

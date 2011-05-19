@@ -15,13 +15,11 @@ configuration.load do
       for a shared hosting enviroment
     DESC
     task :setup_shared, :roles => :web, :except => { :no_release => true } do
-      run<<-CMD 
-        mkdir -p #{shared_path}/var &&
-        mkdir -p #{shared_path}/var/logs &&
-        mkdir -p #{shared_path}/var/cache && 
-        mkdir -p #{shared_path}/var/sessions &&
-        mkdir -p #{shared_path}/system
-      CMD
+      run "mkdir -p #{shared_path}/var"
+      run "mkdir -p #{shared_path}/var/logs"
+      run "mkdir -p #{shared_path}/var/cache"
+      run "mkdir -p #{shared_path}/var/sessions"
+      run "mkdir -p #{shared_path}/system"
       try_sudo "chmod -R 755 #{shared_path}/*"
     end
   end
