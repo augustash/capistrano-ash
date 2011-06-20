@@ -18,8 +18,8 @@ set :drush_bin, "drush"
 # --------------------------------------------
 after "deploy:setup", "deploy:setup_shared"
 after "deploy:finalize_update", "ash:fixperms"
-after "ash:fixperms", "drupal:protect"
 after "deploy:symlink", "drupal:symlink"
+after "drupal:symlink","drupal:protect"
 after "deploy", "drupal:clearcache"
 after "deploy", "deploy:cleanup"
 
