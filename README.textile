@@ -1,3 +1,25 @@
+h2. Overview
+
+Run the following commands in the command line from the project's root directory
+
+<pre>
+  <code>
+    capify .
+    rm -Rf config/deploy.rb; mkdir -p config/deploy
+    touch config/deploy/staging.rb config/deploy/production.rb
+  </code>
+</pre>
+
+After you have edited your @Capfile@ and @staging.rb@ and @production.rb@ files, you will need to run the following command only once per environment:
+
+<pre>
+  <code>
+    cap staging deploy:setup
+    cap production deploy:setup
+  </code>
+</pre>
+
+
 h2. Deploying Magento
 
 Check the "Wiki":https://github.com/augustash/capistrano-ash/wiki for detailed installation instructions.
@@ -9,6 +31,97 @@ The capistrano/ash/drupal library takes a hash of Drupal multisites in the follo
 @set :multisites, {"default" => "mysite.com", "another" => "another.mysite.com"}@
 
 where each key is a folder in your @sites@ directory and each value is the URL of the multisite. If you are not using multisites, just exclude the @:multisites@ variable definition.
+
+
+h3. Capfile
+
+<pre>
+  <code>
+    # Capfile
+    load 'deploy' if respond_to?(:namespace) # cap2 differentiator
+
+    # --------------------------------------------
+    # :application HAS TO BE DEFINED BEFORE
+    # REQUIRING 'ash/drupal' LIBRARY
+    # --------------------------------------------
+    set :application, "bestappever.com"
+    set :stages, %w(staging production)
+
+    # --------------------------------------------
+    # Define required Gems/libraries
+    # --------------------------------------------
+    require 'ash/drupal'
+
+    # --------------------------------------------
+    # Setting defaults
+    # --------------------------------------------
+    # IP-address or host's servername
+    role :app, "bestappever.com"
+    role :web, "bestappever.com"
+    role :db,  "bestappever.com", :primary => true
+
+    # VCS information.
+    set :repository, "https://svn.example.com/REPO/trunk"
+    set :scm_username, "SVN_USER"
+    set :scm_password, proc{Capistrano::CLI.password_prompt("Subversion password for '#{scm_username}':")}
+
+    # SSH login credentials
+    set :user, "SSH_USER"
+    set :password, proc{Capistrano::CLI.password_prompt("SSH password for '#{user}':")}
+    
+    # Deploy to file path
+    set(:deploy_to)  { "/var/www/#{application}/#{stage}" }
+
+    # Database credentials
+    set :dbuser, "DB_USER_NAME"
+
+    # Define which files or directories you want to exclude from being backed up
+    set(:backup_exclude) { [ "var/" ] }
+    
+
+    # --------------------------------------------
+    # Drupal Multi-Sites
+    # --------------------------------------------
+    # Setting which folder in the sites directory to use
+    set :multisites, { 
+      'bestapp' => 'bestappever.com', 
+    }
+
+
+    # --------------------------------------------
+    # Callbacks - Set Before/After Precedence
+    # --------------------------------------------
+    before "deploy:update_code", "deploy:setup_backup"
+    after "deploy:setup_backup", "backup"
+  </code>
+</pre>
+
+h3. config/deploy/staging.rb
+
+<pre>
+  <code>
+    # config/deploy/staging.rb
+    # Database Name
+    set :dbname, "DB_NAME"
+
+    # Backups Path (/var/www/#{application}/staging/backups)
+    set :backups_path,  "#{deploy_to}/backups"
+  </code>
+</pre>
+
+h3. config/deploy/production.rb
+
+<pre>
+  <code>
+    # config/deploy/production.rb
+    # Database Name
+    set :dbname, "DB_NAME"
+
+    # Backups Path (/var/www/#{application}/production/backups)
+    set :backups_path,  "#{deploy_to}/backups"
+  </code>
+</pre>
+
 
 h2. Deploying Zend or Zend/Doctrine example
 
@@ -88,6 +201,13 @@ h3. config/deploy/staging.rb
 <pre>
   <code>
     # config/deploy/staging.rb
+
+    # Deploy site using Capistrano
+    #
+    # Usage:
+    # cap staging deploy:setup
+    # cap staging deploy
+
     # Database Name
     set :dbname, "DB_NAME"
 
@@ -101,6 +221,13 @@ h3. config/deploy/production.rb
 <pre>
   <code>
     # config/deploy/production.rb
+    
+    # Deploy site using Capistrano
+    #
+    # Usage:
+    # cap production deploy:setup
+    # cap production deploy
+
     # Database Name
     set :dbname, "DB_NAME"
 

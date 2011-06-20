@@ -4,7 +4,6 @@ Dir['vendor/plugins/*/recipes/*.rb'].each { |plugin| load(plugin) }
 
 # Required gems/libraries
 require 'rubygems'
-require 'railsless-deploy'
 require 'ash/common'
 require 'capistrano/ext/multistage'
 
@@ -92,8 +91,8 @@ configuration.load do
     desc "Set standard permissions for Ash servers"
     task :fixperms, :except => { :no_release => true } do
       # chmod the files and directories.
-      sudo "find #{latest_release} -type d -exec chmod 755 {} \\;"
-      sudo "find #{latest_release} -type f -exec chmod 644 {} \\;"
+      try_sudo "find #{latest_release} -type d -exec chmod 755 {} \\;"
+      try_sudo "find #{latest_release} -type f -exec chmod 644 {} \\;"
     end
 
     desc "Test: Task used to verify Capistrano is working. Prints operating system name."
@@ -159,39 +158,58 @@ configuration.load do
       web
     end
 
-    desc "Perform a backup of web files"
+    desc <<-DESC
+      Requires the rsync package to be installed.
+      
+      Performs a file-level backup of the application and any assets \
+      from the shared directory that have been symlinked into the \
+      applications root or sub-directories.
+      
+      You can specify which files or directories to exclude from being \
+      backed up (i.e., log files, sessions, cache) by setting the \
+      :backup_exclude variable
+          set(:backup_exclude) { [ "var/", "tmp/", logs/debug.log ] }
+    DESC
     task :web, :roles => :web do
-      puts "Backing up web files (user uploaded content and previous release)"
-      
-      if !backup_exclude.nil? && !backup_exclude.empty?
-        logger.debug "processing backup exclusions..."
-        backup_exclude.each do |pattern|
-          exclude_string << "--exclude '#{pattern}' "
+      if previous_release
+        puts "Backing up web files (user uploaded content and previous release)"
+
+        if !backup_exclude.nil? && !backup_exclude.empty?
+          logger.debug "processing backup exclusions..."
+          backup_exclude.each do |pattern|
+            exclude_string << "--exclude '#{pattern}' "
+          end
+          logger.debug "Exclude string = #{exclude_string}"
         end
-        logger.debug "Exclude string = #{exclude_string}"
+
+        # Copy the previous release to the /tmp directory
+        logger.debug "Copying previous release to the /tmp/#{release_name} directory"
+        run "rsync -avzrtpL #{exclude_string} #{current_path}/ /tmp/#{release_name}/"
+        # create the tarball of the previous release
+        set :archive_name, "release_B4_#{release_name}.tar.gz"
+        logger.debug "Creating a Tarball of the previous release in #{backups_path}/#{archive_name}"
+        run "cd /tmp && tar -cvpf - ./#{release_name}/ | gzip -c --best > #{backups_path}/#{archive_name}"
+
+        # remove the the temporary copy
+        logger.debug "Removing the tempory copy"
+        run "rm -rf /tmp/#{release_name}"
+      else
+        logger.important "no previous release to backup; backup of files skipped"
       end
-      
-      # Copy the previous release to the /tmp directory
-      logger.debug "Copying previous release to the /tmp/#{release_name} directory"
-      run "rsync -avzrtpL #{exclude_string} #{current_path}/ /tmp/#{release_name}/"
-      # create the tarball of the previous release
-      set :archive_name, "release_B4_#{release_name}.tar.gz"
-      logger.debug "Creating a Tarball of the previous release in #{backups_path}/#{archive_name}"
-      run "cd /tmp && tar -cvpf - ./#{release_name}/ | gzip -c --best > #{backups_path}/#{archive_name}"
-      
-      # remove the the temporary copy
-      logger.debug "Removing the tempory copy"
-      run "rm -rf /tmp/#{release_name}"
     end
 
     desc "Perform a backup of database files"
     task :db, :roles => :db do
-      puts "Backing up the database now and putting dump file in the previous release directory"
-      # define the filename (include the current_path so the dump file will be within the dirrectory)
-      filename = "#{current_path}/#{dbname}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
-      # dump the database for the proper environment
-      run "mysqldump -u #{dbuser} -p #{dbname} | gzip -c --best > #{filename}" do |ch, stream, out|
-          ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
+      if previous_release
+        puts "Backing up the database now and putting dump file in the previous release directory"
+        # define the filename (include the current_path so the dump file will be within the directory)
+        filename = "#{current_path}/#{dbname}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
+        # dump the database for the proper environment
+        run "mysqldump -u #{dbuser} -p #{dbname} | gzip -c --best > #{filename}" do |ch, stream, out|
+            ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
+        end
+      else
+        logger.important "no previous release to backup to; backup of database skipped"
       end
     end
     

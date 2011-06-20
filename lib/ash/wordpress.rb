@@ -1,5 +1,6 @@
 # Require our base library.
 require 'ash/base'
+require 'railsless-deploy'
 
 configuration = Capistrano::Configuration.respond_to?(:instance) ?
   Capistrano::Configuration.instance(:must_exist) :
@@ -29,7 +30,7 @@ namespace :deploy do
     run "rm -Rf #{shared_path}/log"
     run "rm -Rf #{shared_path}/pids"
     run "rm -Rf #{shared_path}/system"
-
+    
     # create shared directories
     run "mkdir -p #{shared_path}/uploads"
     run "mkdir -p #{shared_path}/cache"
@@ -43,6 +44,7 @@ namespace :deploy do
     # remove shared directories
     run "rm -Rf #{latest_release}/#{uploads_path}"
     run "rm -Rf #{latest_release}/wp-content/cache"
+    
     # Removing cruft files.
     run "rm -Rf #{latest_release}/license.txt"
     run "rm -Rf #{latest_release}/readme.html"
