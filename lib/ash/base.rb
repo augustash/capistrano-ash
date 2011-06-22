@@ -105,7 +105,7 @@ configuration.load do
       run "echo $PATH"
     end
   end
-
+  
   # --------------------------------------------
   # PHP tasks
   # --------------------------------------------
@@ -231,6 +231,31 @@ configuration.load do
           File.join(backups_path, backup) }.join(" ")
 
         try_sudo "rm -rf #{archives}"
+      end
+    end
+  end
+
+  # --------------------------------------------
+  # Remote File/Directory test tasks
+  # --------------------------------------------
+  namespace :remote do
+    namespace :file do
+      desc "Test: Task to test existence of missing file"
+      task :missing do
+        if remote_file_exists?('/dev/mull')
+          logger.info "FAIL - Why does the '/dev/mull' path exist???"
+        else
+          logger.info "GOOD - Verified the '/dev/mull' path does not exist!"
+        end
+      end
+
+      desc "Test: Task used to test existence of a present file"
+      task :exists do
+        if remote_file_exists?('/dev/null')
+          logger.info "GOOD - Verified the '/dev/null' path exists!"
+        else
+          logger.info "FAIL - WHAT happened to the '/dev/null' path???"
+        end
       end
     end
   end

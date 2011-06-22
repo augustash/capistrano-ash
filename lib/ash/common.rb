@@ -15,3 +15,9 @@ end
 def text_prompt(prompt="Value: ")
   Capistrano::CLI.ui.ask(prompt) { |q| q.echo = true }
 end
+
+# Test to see if a file exists by providing 
+# the full path to the expected file location
+def remote_file_exists?(full_path)
+  'true' ==  capture("if [ -e #{full_path} ]; then echo 'true'; fi").strip
+end

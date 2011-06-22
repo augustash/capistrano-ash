@@ -7,7 +7,7 @@ begin
     gemspec.name = "capistrano-ash"
     gemspec.summary = "Useful task libraries for August Ash recipes for Capistrano"
     gemspec.description = "August Ash recipes for Capistrano"
-    gemspec.email = "jake@augustash.com"
+    gemspec.email = "code@augustash.com"
     gemspec.homepage = "https://github.com/augustash/capistrano-ash"
     gemspec.authors = ["August Ash"]
   end
