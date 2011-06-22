@@ -1,3 +1,8 @@
+== 1.1.5
+* Added a common method and test tasks to check if a file exists on the remote server
+* Added drupal:symlink_config_file as a utility task to check if the settings.php file exists in one of two formats (settings.ENV.php or settings.php.ENV)
+* The 'default' directory in `sites` is no longer the default application directory to be replaced. Instead the `:multisites` variable now expects the `:application` variable will also represent a folder within the `sites` directory that will be used as the default site when running drush commands. (i.e., `set :multisites, { "#{application}" => "#{application}" }`)
+
 == 1.0.0
 * Added the drupal:htaccess task for copying distributed .htaccess files
 * Added example Drupal Capfile and staging/production deployment files
