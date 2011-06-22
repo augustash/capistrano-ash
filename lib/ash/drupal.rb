@@ -95,9 +95,31 @@ configuration.load do
    task :symlink, :except => { :no_release => true } do
       multisites.each_pair do |folder, url|
         run "ln -nfs #{shared_path}/#{url}/files #{latest_release}/sites/#{url}/files"
-        run "ln -nfs #{latest_release}/sites/#{url}/settings.php.#{stage} #{latest_release}/sites/#{url}/settings.php"
         run "#{drush_bin} -l #{url} -r #{current_path} vset --yes file_directory_path sites/#{url}/files"
+        
+        # symlinks the appropriate environment's settings.php file
+        symlink_config_file
       end
+   end
+   
+   desc <<-DESC
+    Symlinks the appropriate environment's settings file within the proper sites directory
+    
+    Assumes the environment's settings file will be in one of two formats:
+        settings.<environment>.php    => new default
+        settings.php.<environment>    => deprecated
+   DESC
+   task :symlink_config_file, :except => { :no_release => true} do
+     drupal_app_site_dir = " #{latest_release}/sites/#{url}"
+     
+     case true
+     when !Dir.entries(drupal_app_site_dir).glob('settings.*.php').empty?
+       run "ln -nfs #{drupal_app_site_dir}/settings.#{stage}.php #{drupal_app_site_dir}/settings.php"
+     when !Dir.entries(drupal_app_site_dir).glob('settings.php.*').empty?
+       run "ln -nfs #{drupal_app_site_dir}/settings.php.#{stage} #{drupal_app_site_dir}/settings.php"
+     else
+       logger.important "Failed to symlink the settings.php file because an unknown pattern was used"
+     end
    end
 
    desc "Replace local database paths with remote paths"
