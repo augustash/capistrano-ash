@@ -1,3 +1,6 @@
+== 1.1.6
+* Bug Fix: removed "config" from ignore statement to prevent legit Magento files from being ignored
+
 == 1.1.5
 * Added a common method and test tasks to check if a file exists on the remote server
 * Added drupal:symlink_config_file as a utility task to check if the settings.php file exists in one of two formats (settings.ENV.php or settings.php.ENV)
