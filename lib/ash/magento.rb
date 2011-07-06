@@ -59,6 +59,7 @@ configuration.load do
       # set the file and directory permissions
       ash.fixperms
       run "chmod 400 #{latest_release}/pear"
+      run "chmod 400 #{latest_release}/mage"
       run "chmod o+w #{latest_release}/app/etc"
     end
 
@@ -81,7 +82,12 @@ configuration.load do
   namespace :magento do
     desc "Set appropriate configuration values for the stage"
     task :activate_config, :except => { :no_release => true } do
-      run "cp -f #{latest_release}/app/etc/local.xml.#{stage} #{latest_release}/app/etc/local.xml"
+      case true
+      when remote_file_exists?("#{latest_release}/app/etc/local.#{stage}.xml")
+        run "cp -f #{latest_release}/app/etc/local.#{stage}.xml #{latest_release}/app/etc/local.xml"
+      when remote_file_exists?("#{latest_release}/app/etc/local.xml.#{stage}")
+        run "cp -f #{latest_release}/app/etc/local.xml.#{stage} #{latest_release}/app/etc/local.xml"
+      end
     end
 
     desc "Symlink shared directories"
@@ -113,13 +119,13 @@ configuration.load do
         puts "#{channel[:host]}: #{data}" 
         break if stream == :err    
       end
-    end
+    end    
   end
 
   # --------------------------------------------
   # Custom tasks
   # --------------------------------------------
-
+  
   # update core_config_data; set value = "domain" where scope_id = 0 and path = "web/unsecure/base_url"
 
 end
