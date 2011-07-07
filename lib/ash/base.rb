@@ -23,6 +23,7 @@ configuration.load do
   # --------------------------------------------
   after "deploy:setup", "deploy:setup_shared"
   after "deploy:setup_shared", "deploy:setup_backup"
+  after "deploy:finalize_update", "ash:htaccess"
   after "deploy", "deploy:cleanup"
 
   # --------------------------------------------
@@ -103,6 +104,12 @@ configuration.load do
     desc "Test: Task used to verify Capistrano is working. Prints environment of Capistrano user."
     task :getpath do
       run "echo $PATH"
+    end
+    
+    desc 'Copy distribution htaccess file'
+    task :htaccess do
+      run "mv #{latest_release}/htaccess.dist #{latest_release}/.htaccess" if 
+        remote_file_exists?("#{latest_release}/htaccess.dist")
     end
   end
   

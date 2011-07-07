@@ -24,7 +24,8 @@ configuration.load do
     desc "Setup local files necessary for deployment"
     task :setup_local do
       # attempt to create files needed for proper deployment
-      system("touch app/etc/local.xml.staging app/etc/local.xml.production")
+      system("cp .htaccess htaccess.dist")
+      system("touch app/etc/local.staging.xml app/etc/local.production.xml")
     end
     
     desc "Setup shared application directories and permissions after initial setup"
@@ -58,8 +59,8 @@ configuration.load do
 
       # set the file and directory permissions
       ash.fixperms
-      run "chmod 400 #{latest_release}/pear"
-      run "chmod 400 #{latest_release}/mage"
+      run "chmod 400 #{latest_release}/pear" if remote_file_exists?("#{latest_release}/pear")
+      run "chmod 400 #{latest_release}/mage" if remote_file_exists?("#{latest_release}/mage")
       run "chmod o+w #{latest_release}/app/etc"
     end
 
