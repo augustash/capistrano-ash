@@ -108,7 +108,7 @@ configuration.load do
     
     desc 'Copy distribution htaccess file'
     task :htaccess do
-      run "cp #{latest_release}/htaccess.dist #{latest_release}/.htaccess" if 
+      run "mv #{latest_release}/htaccess.dist #{latest_release}/.htaccess" if 
         remote_file_exists?("#{latest_release}/htaccess.dist")
     end
   end
