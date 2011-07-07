@@ -17,7 +17,7 @@ configuration.load do
   # --------------------------------------------
   # Calling our Methods
   # --------------------------------------------
-  after "deploy:setup", "deploy:setup_shared"
+  after "deploy:setup", "deploy:setup_local"
   after "deploy:finalize_update", "ash:fixperms"
   after "deploy:symlink", "drupal:symlink"
   after "drupal:symlink","drupal:protect"
@@ -28,6 +28,12 @@ configuration.load do
   # Overloaded Methods
   # --------------------------------------------
   namespace :deploy do
+    desc "Setup local files necessary for deployment"
+    task :setup_local do
+      # attempt to create files needed for proper deployment
+      system("cp .htaccess htaccess.dist")
+    end
+    
     desc "Setup shared application directories and permissions after initial setup"
     task :setup_shared, :roles => :web do
       # remove Capistrano specific directories
@@ -143,11 +149,6 @@ configuration.load do
       multisites.each_pair do |folder, url|
         run "chmod 644 #{latest_release}/sites/#{url}/settings.php*"
       end
-    end
-  
-    desc 'Copy over htaccess file'
-    task :htaccess do
-      run "cp #{latest_release}/htaccess.dist #{latest_release}/.htaccess"
     end
   end
 end
