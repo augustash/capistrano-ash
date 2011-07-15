@@ -21,7 +21,7 @@ configuration.load do
   # --------------------------------------------
   namespace :deploy do    
     desc "Setup shared application directories and permissions after initial setup"
-    task :setup_shared, :roles => :web do
+    task :setup_shared do
       # remove Capistrano specific directories
       run "rm -Rf #{shared_path}/log"
       run "rm -Rf #{shared_path}/pids"

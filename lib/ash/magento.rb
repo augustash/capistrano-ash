@@ -22,14 +22,14 @@ configuration.load do
   # --------------------------------------------
   namespace :deploy do
     desc "Setup local files necessary for deployment"
-    task :setup_local, :roles => :web do
+    task :setup_local do
       # attempt to create files needed for proper deployment
       system("cp .htaccess htaccess.dist")
       system("touch app/etc/local.staging.xml app/etc/local.production.xml")
     end
     
     desc "Setup shared application directories and permissions after initial setup"
-    task :setup_shared, :roles => :web do
+    task :setup_shared do
       # remove Capistrano specific directories
       run "rm -Rf #{shared_path}/log"
       run "rm -Rf #{shared_path}/pids"
