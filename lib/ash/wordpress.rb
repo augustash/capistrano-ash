@@ -40,7 +40,7 @@ namespace :deploy do
   end
 
   desc "[internal] Touches up the released code. This is called by update_code after the basic deploy finishes."
-  task :finalize_update, :except => { :no_release => true } do
+  task :finalize_update, :roles => :web, :except => { :no_release => true } do
     # remove shared directories
     run "rm -Rf #{latest_release}/#{uploads_path}"
     run "rm -Rf #{latest_release}/wp-content/cache"
@@ -56,14 +56,14 @@ end
 # --------------------------------------------  
 namespace :wordpress do
   desc "Links the correct settings file"
-  task :symlink do
+  task :symlink, :roles => :web, :except => { :no_release => true } do
     run "ln -nfs #{shared_path}/uploads #{current_release}/#{uploads_path}"
     run "ln -nfs #{shared_path}/cache #{current_release}/wp-content/cache"
     run "ln -nfs #{latest_release}/wp-config.php.#{stage} #{latest_release}/wp-config.php"
   end
   
   desc "Set URL in database"
-  task :updatedb do
+  task :updatedb, :roles => :db, :except => { :no_release => true } do
     run "mysql -u #{dbuser} -p #{dbpass} #{dbname} -e 'UPDATE #{dbprefix}options SET option_value = \"#{application}\" WHERE option_name = \"siteurl\" OR option_name = \"home\"'"
   end
   

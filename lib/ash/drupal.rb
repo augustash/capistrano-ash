@@ -29,7 +29,7 @@ configuration.load do
   # --------------------------------------------
   namespace :deploy do
     desc "Setup local files necessary for deployment"
-    task :setup_local do
+    task :setup_local, :roles => :web do
       # attempt to create files needed for proper deployment
       system("cp .htaccess htaccess.dist")
     end
@@ -51,7 +51,7 @@ configuration.load do
     end
 
     desc "[internal] Touches up the released code. This is called by update_code after the basic deploy finishes."
-    task :finalize_update, :except => { :no_release => true } do
+    task :finalize_update, :roles => :web, :except => { :no_release => true } do
       # remove shared directories
       multisites.each_pair do |folder, url|
         run "mv #{latest_release}/sites/#{folder} #{latest_release}/sites/#{url}"
@@ -61,14 +61,14 @@ configuration.load do
 
     namespace :web do
       desc "Disable the application and show a message screen"
-      task :disable do
+      task :disable, :roles => :web do
         multisites.each_pair do |folder, url|
           run "#{drush_bin} -l #{url} -r #{latest_release} vset --yes site_offline 1"
         end
       end
 
       desc "Enable the application and remove the message screen"
-      task :enable do
+      task :enable, :roles => :web do
         multisites.each_pair do |folder, url|
           run "#{drush_bin} -l #{url} -r #{latest_release} vdel --yes site_offline"
         end
@@ -98,7 +98,7 @@ configuration.load do
   # --------------------------------------------
   namespace :drupal do
    desc "Symlink shared directories"
-   task :symlink, :except => { :no_release => true } do
+   task :symlink, :roles => :web, :except => { :no_release => true } do
       multisites.each_pair do |folder, url|
         # symlinks the appropriate environment's settings.php file
         symlink_config_file
@@ -115,7 +115,7 @@ configuration.load do
         settings.<environment>.php    => new default
         settings.php.<environment>    => deprecated
    DESC
-   task :symlink_config_file, :except => { :no_release => true} do
+   task :symlink_config_file, :roles => :web, :except => { :no_release => true} do
      multisites.each_pair do |folder, url|
        drupal_app_site_dir = " #{latest_release}/sites/#{url}"
        
@@ -131,21 +131,21 @@ configuration.load do
    end
 
    desc "Replace local database paths with remote paths"
-   task :updatedb, :except => { :no_release => true } do
+   task :updatedb, :roles => :web, :except => { :no_release => true } do
      multisites.each_pair do |folder, url|
        run "#{drush_bin} -l #{url} -r #{current_path} sqlq \"UPDATE {files} SET filepath = REPLACE(filepath,'sites/#{folder}/files','sites/#{url}/files');\""
      end
    end
 
     desc "Clear all Drupal cache"
-    task :clearcache, :except => { :no_release => true } do
+    task :clearcache, :roles => :web, :except => { :no_release => true } do
       multisites.each_pair do |folder, url|
         run "#{drush_bin} -l #{url} -r #{current_path} cache-clear all"
       end
     end
   
     desc "Protect system files"
-    task :protect, :except => { :no_release => true } do
+    task :protect, :roles => :web, :except => { :no_release => true } do
       multisites.each_pair do |folder, url|
         run "chmod 644 #{latest_release}/sites/#{url}/settings.php*"
       end

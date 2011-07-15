@@ -21,7 +21,7 @@ configuration.load do
   # --------------------------------------------
   namespace :deploy do    
     desc "Setup shared application directories and permissions after initial setup"
-    task :setup_shared do
+    task :setup_shared, :roles => :web do
       # remove Capistrano specific directories
       run "rm -Rf #{shared_path}/log"
       run "rm -Rf #{shared_path}/pids"
@@ -38,7 +38,7 @@ configuration.load do
     end
 
     desc "[internal] Touches up the released code. This is called by update_code after the basic deploy finishes."
-    task :finalize_update, :except => { :no_release => true } do
+    task :finalize_update, :roles => :web, :except => { :no_release => true } do
       # synchronize media directory with shared data
       run "rsync -rltDvzog #{latest_release}/media/ #{shared_path}/media/"
       
@@ -61,7 +61,7 @@ configuration.load do
   # --------------------------------------------
   namespace :ash do
     desc "Set standard permissions for Ash servers"
-    task :fixperms, :except => { :no_release => true } do
+    task :fixperms, :roles => :web, :except => { :no_release => true } do
       # chmod the files and directories.
       run "find #{latest_release} -type d -exec chmod 755 {} \\;"
       run "find #{latest_release} -type f -exec chmod 644 {} \\;"

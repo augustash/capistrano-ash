@@ -40,7 +40,7 @@ configuration.load do
   
   namespace :zend do
     desc "Symlink shared directories"
-    task :symlink, :except => { :no_release => true } do
+    task :symlink, :roles => :web, :except => { :no_release => true } do
       run "ln -nfs #{shared_path}/var #{current_release}/var"
       run "ln -nfs #{shared_path}/system #{current_release}/public/system"
       run "mv #{current_release}/application/configs/application.ini.dist #{current_release}/application/configs/application.ini"
@@ -61,7 +61,7 @@ configuration.load do
   
   namespace :doctrine do
     desc "Run Doctrine Migrations"
-    task :migrate, :except => { :no_release => true } do
+    task :migrate, :roles => :web, :except => { :no_release => true } do
       puts "Running Doctrine Migrations..."
       run "cd #{current_release} && ./scripts/doctrine-cli migrate"
     end
