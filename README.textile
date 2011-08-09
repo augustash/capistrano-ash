@@ -239,3 +239,6 @@ h3. config/deploy/production.rb
 h2. Deploying WordPress
 
 Check the "Wiki":https://github.com/augustash/capistrano-ash/wiki for detailed installation instructions.
+
+"WordPress on shared hosting":https://github.com/augustash/capistrano-ash/wiki/WordPress-Shared-Hosting-Example
+"WordPress on virtual or dedicated servers":https://github.com/augustash/capistrano-ash/wiki/WordPress-Private-Server-Example
