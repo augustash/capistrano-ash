@@ -90,7 +90,7 @@ configuration.load do
   # --------------------------------------------
   namespace :ash do
     desc "Set standard permissions for Ash servers"
-    task :fixperms, :except => { :no_release => true } do
+    task :fixperms, :roles => :web, :except => { :no_release => true } do
       # chmod the files and directories.
       try_sudo "find #{latest_release} -type d -exec chmod 755 {} \\;"
       try_sudo "find #{latest_release} -type f -exec chmod 644 {} \\;"
@@ -107,7 +107,7 @@ configuration.load do
     end
     
     desc 'Copy distribution htaccess file'
-    task :htaccess do
+    task :htaccess, :roles => :web do
       run "mv #{latest_release}/htaccess.dist #{latest_release}/.htaccess" if 
         remote_file_exists?("#{latest_release}/htaccess.dist")
     end
@@ -119,12 +119,12 @@ configuration.load do
   namespace :php do
     namespace :apc do
       desc "Disable the APC administrative panel"
-      task :disable, :except => { :no_release => true } do
+      task :disable, :roles => :web, :except => { :no_release => true } do
         run "rm #{current_path}/apc.php"
       end
 
       desc "Enable the APC administrative panel"
-      task :enable, :except => { :no_release => true } do
+      task :enable, :roles => :web, :except => { :no_release => true } do
         run "ln -s /usr/local/lib/php/apc.php #{current_path}/apc.php"
       end
     end
