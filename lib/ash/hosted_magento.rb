@@ -56,6 +56,13 @@ configuration.load do
     end
   end
   
+  namespace :magento do
+    desc "Purge Magento cache directory"
+    task :purge_cache, :roles => :web, :except => { :no_release => true } do
+      run "rm -Rf #{shared_path}/var/cache/*"
+    end
+  end
+  
   # --------------------------------------------
   # Overloaded Ash tasks
   # --------------------------------------------

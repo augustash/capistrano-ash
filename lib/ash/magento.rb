@@ -25,7 +25,8 @@ configuration.load do
     task :setup_local do
       # attempt to create files needed for proper deployment
       system("cp .htaccess htaccess.dist")
-      system("touch app/etc/local.xml.staging app/etc/local.xml.production")
+      system("cp app/etc/local.xml app/etc/local.xml.staging")
+      system("cp app/etc/local.xml app/etc/local.xml.production")
     end
     
     desc "Setup shared application directories and permissions after initial setup"
