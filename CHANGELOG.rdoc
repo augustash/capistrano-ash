@@ -1,3 +1,6 @@
+== 1.1.11
+* Added functionality to help fascilitate migrating local databases to remote and back
+
 == 1.1.7
 * Updated naming convention for Magento configuration files
 
