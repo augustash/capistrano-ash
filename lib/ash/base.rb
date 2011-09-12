@@ -69,6 +69,21 @@ configuration.load do
   # show password requests on windows
   # (http://weblog.jamisbuck.org/2007/10/14/capistrano-2-1)
   default_run_options[:pty] = true
+  
+  # Database migration settings
+  set :db_local_host, "192.168.16.116"
+  set :db_local_user, "developer"
+  set :db_local_name, proc{text_prompt("Local database name: #{db_local_name}: ")}
+  set :db_local_pass, proc{text_prompt("Local database password for: #{db_local_user}: ")}
+  set :db_remote_user, proc{text_prompt("Remote database user: #{db_remote_user}: ")}
+  set :db_remote_pass, proc{text_prompt("Remote database password for: #{db_remote_user}: ")}
+  set :db_remote_name, proc{text_prompt("Remote database name: #{db_remote_name}: ")}
+  set :db_remote_host, "localhost"
+  
+  # Database replacement values
+  # Format: local => remote
+  set :db_regex_hash, {
+  }
 
   # --------------------------------------------
   # Overloaded tasks
@@ -129,7 +144,85 @@ configuration.load do
       end
     end
   end
+  
+  # --------------------------------------------
+  # Remote/Local database migration tasks
+  # --------------------------------------------
+  namespace :db do
+    desc "Migrate remote application database to local server"
+    task :to_local do
+      remote_export
+      remote_download
+      local_import
+    end
 
+    desc "Migrate local application database to remote server"
+    task :to_remote do
+      local_export
+      local_upload
+      remote_import
+    end
+
+    desc "Handles importing a MySQL database dump file. Uncompresses the file, does regex replacements, and imports."
+    task :local_import do
+      # check for compressed file and decompress
+      if local_file_exists?("#{db_remote_name}.sql.gz")
+        system "gunzip -f #{db_remote_name}.sql.gz"
+      end
+
+      if local_file_exists?("#{db_remote_name}.sql")
+        # run through replacements on SQL file
+        db_regex_hash.each_pair do |local, remote|
+          system "perl -pi -e 's/#{remote}/#{local}/' #{db_remote_name}.sql"
+        end
+        # import into database
+        system "mysql -h#{db_local_host} -u#{db_local_user} -p#{db_local_pass} #{db_local_name} < #{db_remote_name}.sql"
+        # remove used file
+        run "rm -f #{deploy_to}/#{db_remote_name}.sql.gz"
+        system "rm -f #{db_remote_name}.sql"
+      end
+    end
+
+    task :local_export do
+      system "mysqldump --opt -h#{db_local_host} -u#{db_local_user} -p#{db_local_pass} #{db_local_name} | gzip -c --best > #{db_local_name}.sql.gz"
+    end
+
+    desc "Upload locally created MySQL dumpfile to remote server via SCP"
+    task :local_upload do
+      upload "#{db_local_name}.sql.gz", "#{deploy_to}/#{db_local_name}.sql.gz", :via => :scp
+    end
+
+    desc "Handles importing a MySQL database dump file. Uncompresses the file, does regex replacements, and imports."
+    task :remote_import, :roles => :db do
+      # check for compressed file and decompress
+      if remote_file_exists?("#{deploy_to}/#{db_local_name}.sql.gz")
+        run "gunzip -f #{deploy_to}/#{db_local_name}.sql.gz"
+      end
+
+      if remote_file_exists?("#{deploy_to}/#{db_local_name}.sql")
+        # run through replacements on SQL file
+        db_regex_hash.each_pair do |local, remote|
+          run "perl -pi -e 's/#{local}/#{remote}/' #{deploy_to}/#{db_local_name}.sql"
+        end
+        # import into database
+        run "mysql -h#{db_remote_host} -u#{db_remote_user} -p#{db_remote_pass} #{db_remote_name} < #{deploy_to}/#{db_local_name}.sql"
+        # remove used file
+        run "rm -f #{deploy_to}/#{db_local_name}.sql"
+        system "rm -rf #{db_local_name}.sql.gz"
+      end
+    end
+
+    desc "Create a compressed MySQL dumpfile of the remote database"
+    task :remote_export, :roles => :db do
+      run "mysqldump --opt -h#{db_remote_host} -u#{db_remote_user} -p#{db_remote_pass} #{db_remote_name} | gzip -c --best > #{deploy_to}/#{db_remote_name}.sql.gz"
+    end
+
+    desc "Download remotely created MySQL dumpfile to local machine via SCP"
+    task :remote_download do
+      download "#{deploy_to}/#{db_remote_name}.sql.gz", "#{db_remote_name}.sql.gz", :via => :scp
+    end
+  end
+  
   # --------------------------------------------
   # phpMyAdmin tasks
   # --------------------------------------------
