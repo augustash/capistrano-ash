@@ -54,7 +54,9 @@ configuration.load do
     task :finalize_update, :roles => :web, :except => { :no_release => true } do
       # remove shared directories
       multisites.each_pair do |folder, url|
-        run "mv #{latest_release}/sites/#{folder} #{latest_release}/sites/#{url}"
+        if folder != url 
+          run "mv #{latest_release}/sites/#{folder} #{latest_release}/sites/#{url}"
+        end
         run "rm -Rf #{latest_release}/sites/#{url}/files"
       end
     end
