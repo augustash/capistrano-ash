@@ -358,6 +358,28 @@ configuration.load do
         end
       end
     end
+    
+    namespace :dir do
+      desc "Test: Task to test existence of missing dir"
+      task :missing do
+        if remote_dir_exists?('/etc/fake_dir')
+          logger.info "FAIL - Why does the '/etc/fake_dir' dir exist???"
+        else
+          logger.info "GOOD - Verified the '/etc/fake_dir' dir does not exist!"
+        end
+      end
+      
+      desc "Test: Task used to test existence of an existing directory"
+      task :exists do
+        if remote_dir_exists?('/etc')
+          logger.info "GOOD - Verified the '/etc' dir exists!"
+        else
+          logger.info "FAIL - WHAT happened to the '/etc' path???"
+        end
+      end
+      
+    end
+    
   end
 
 end
