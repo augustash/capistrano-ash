@@ -374,7 +374,7 @@ configuration.load do
         if remote_dir_exists?('/etc')
           logger.info "GOOD - Verified the '/etc' dir exists!"
         else
-          logger.info "FAIL - WHAT happened to the '/etc' path???"
+          logger.info "FAIL - WHAT happened to the '/etc' dir???"
         end
       end
       
