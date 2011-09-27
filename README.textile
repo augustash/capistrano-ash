@@ -1,3 +1,7 @@
+h2. Installation
+
+<pre><code>gem install capistrano-ash</code></pre>
+
 h2. Overview
 
 Run the following commands in the command line from the project's root directory
