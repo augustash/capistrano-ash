@@ -63,13 +63,10 @@ configuration.load do
   _cset(:backup_exclude)  { [] }
   set :exclude_string,    ''
 
-  # Define the default number of backups to keep
-  set :keep_backups,      10
-
   # show password requests on windows
   # (http://weblog.jamisbuck.org/2007/10/14/capistrano-2-1)
   default_run_options[:pty] = true
-  
+
   # Database migration settings
   set :db_local_host, "192.168.16.116"
   set :db_local_user, "developer"
