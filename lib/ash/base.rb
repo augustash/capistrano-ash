@@ -173,7 +173,7 @@ configuration.load do
       if local_file_exists?("#{db_remote_name}.sql")
         # run through replacements on SQL file
         db_regex_hash.each_pair do |local, remote|
-          system "perl -pi -e 's/#{remote}/#{local}/' #{db_remote_name}.sql"
+          system "perl -pi -e 's/#{remote}/#{local}/g' #{db_remote_name}.sql"
         end
         # import into database
         system "mysql -h#{db_local_host} -u#{db_local_user} -p#{db_local_pass} #{db_local_name} < #{db_remote_name}.sql"
@@ -202,7 +202,7 @@ configuration.load do
       if remote_file_exists?("#{deploy_to}/#{db_local_name}.sql")
         # run through replacements on SQL file
         db_regex_hash.each_pair do |local, remote|
-          run "perl -pi -e 's/#{local}/#{remote}/' #{deploy_to}/#{db_local_name}.sql"
+          run "perl -pi -e 's/#{local}/#{remote}/g' #{deploy_to}/#{db_local_name}.sql"
         end
         # import into database
         run "mysql -h#{db_remote_host} -u#{db_remote_user} -p#{db_remote_pass} #{db_remote_name} < #{deploy_to}/#{db_local_name}.sql"
