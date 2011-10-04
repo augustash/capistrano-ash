@@ -28,7 +28,7 @@ configuration.load do
       system("cp app/etc/local.xml app/etc/local.xml.staging")
       system("cp app/etc/local.xml app/etc/local.xml.production")
     end
-    
+
     desc "Setup shared application directories and permissions after initial setup"
     task :setup_shared do
       # remove Capistrano specific directories
@@ -51,7 +51,7 @@ configuration.load do
       # synchronize media directory with shared data
       sudo "rsync -rltDvzog #{latest_release}/media/ #{shared_path}/media/"
       sudo "chmod -R 777 #{shared_path}/media/"
-      
+
       # remove directories that will be shared
       run "rm -Rf #{latest_release}/includes"
       run "rm -Rf #{latest_release}/media"
@@ -106,11 +106,11 @@ configuration.load do
     end
 
     desc "Watch Magento system log"
-    task :watch_logs, :roles => :web, :except => { :no_release => true } do      
+    task :watch_logs, :roles => :web, :except => { :no_release => true } do
       run "tail -f #{shared_path}/var/log/system.log" do |channel, stream, data|
         puts  # for an extra line break before the host name
-        puts "#{channel[:host]}: #{data}" 
-        break if stream == :err    
+        puts "#{channel[:host]}: #{data}"
+        break if stream == :err
       end
     end
 
@@ -118,16 +118,10 @@ configuration.load do
     task :watch_exceptions, :roles => :web, :except => { :no_release => true } do
       run "tail -f #{shared_path}/var/log/exception.log" do |channel, stream, data|
         puts  # for an extra line break before the host name
-        puts "#{channel[:host]}: #{data}" 
-        break if stream == :err    
+        puts "#{channel[:host]}: #{data}"
+        break if stream == :err
       end
-    end    
+    end
   end
-
-  # --------------------------------------------
-  # Custom tasks
-  # --------------------------------------------
-  
-  # update core_config_data; set value = "domain" where scope_id = 0 and path = "web/unsecure/base_url"
 
 end
