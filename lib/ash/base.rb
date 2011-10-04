@@ -17,7 +17,7 @@ configuration.load do
   # Set default stages
   set :stages, %w(staging production)
   set :default_stge, "staging"
-  
+
   # --------------------------------------------
   # Task chains
   # --------------------------------------------
@@ -53,7 +53,7 @@ configuration.load do
     "RELEASE*", "*.rb", "*.sql", "nbproject", "_template"]
 
   # phpMyAdmin version
-  set :pma_version,       "3.3.8"
+  set :pma_version,       "3.4.5"
 
   # Backups Path
   _cset(:backups_path)    { File.join(deploy_to, "backups") }
@@ -63,13 +63,10 @@ configuration.load do
   _cset(:backup_exclude)  { [] }
   set :exclude_string,    ''
 
-  # Define the default number of backups to keep
-  set :keep_backups,      10
-
   # show password requests on windows
   # (http://weblog.jamisbuck.org/2007/10/14/capistrano-2-1)
   default_run_options[:pty] = true
-  
+
   # Database migration settings
   set :db_local_host, "192.168.16.116"
   set :db_local_user, "developer"
@@ -79,7 +76,7 @@ configuration.load do
   set :db_remote_pass, proc{text_prompt("Remote database password for: #{db_remote_user}: ")}
   set :db_remote_name, proc{text_prompt("Remote database name: #{db_remote_name}: ")}
   set :db_remote_host, "localhost"
-  
+
   # Database replacement values
   # Format: local => remote
   set :db_regex_hash, {
@@ -93,7 +90,7 @@ configuration.load do
     task :setup_shared do
       puts "STUB: Setup"
     end
-    
+
     desc "Setup backup directory for database and web files"
     task :setup_backup, :except => { :no_release => true } do
       run "#{try_sudo} mkdir -p #{backups_path} && #{try_sudo} chmod g+w #{backups_path}"
@@ -120,14 +117,14 @@ configuration.load do
     task :getpath do
       run "echo $PATH"
     end
-    
+
     desc 'Copy distribution htaccess file'
     task :htaccess, :roles => :web do
-      run "mv #{latest_release}/htaccess.dist #{latest_release}/.htaccess" if 
+      run "mv #{latest_release}/htaccess.dist #{latest_release}/.htaccess" if
         remote_file_exists?("#{latest_release}/htaccess.dist")
     end
   end
-  
+
   # --------------------------------------------
   # PHP tasks
   # --------------------------------------------
@@ -144,7 +141,7 @@ configuration.load do
       end
     end
   end
-  
+
   # --------------------------------------------
   # Remote/Local database migration tasks
   # --------------------------------------------
@@ -222,7 +219,7 @@ configuration.load do
       download "#{deploy_to}/#{db_remote_name}.sql.gz", "#{db_remote_name}.sql.gz", :via => :scp
     end
   end
-  
+
   # --------------------------------------------
   # phpMyAdmin tasks
   # --------------------------------------------
@@ -260,11 +257,11 @@ configuration.load do
 
     desc <<-DESC
       Requires the rsync package to be installed.
-      
+
       Performs a file-level backup of the application and any assets \
       from the shared directory that have been symlinked into the \
       applications root or sub-directories.
-      
+
       You can specify which files or directories to exclude from being \
       backed up (i.e., log files, sessions, cache) by setting the \
       :backup_exclude variable
@@ -312,7 +309,7 @@ configuration.load do
         logger.important "no previous release to backup to; backup of database skipped"
       end
     end
-    
+
     desc <<-DESC
       Clean up old backups. By default, the last 10 backups are kept on each \
       server (though you can change this with the keep_backups variable). All \
@@ -358,6 +355,25 @@ configuration.load do
         end
       end
     end
-  end
 
+    namespace :dir do
+      desc "Test: Task to test existence of missing dir"
+      task :missing do
+        if remote_dir_exists?('/etc/fake_dir')
+          logger.info "FAIL - Why does the '/etc/fake_dir' dir exist???"
+        else
+          logger.info "GOOD - Verified the '/etc/fake_dir' dir does not exist!"
+        end
+      end
+
+      desc "Test: Task used to test existence of an existing directory"
+      task :exists do
+        if remote_dir_exists?('/etc')
+          logger.info "GOOD - Verified the '/etc' dir exists!"
+        else
+          logger.info "FAIL - WHAT happened to the '/etc' dir???"
+        end
+      end
+    end
+  end
 end

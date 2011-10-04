@@ -1,3 +1,13 @@
+== 1.1.13
+* FIXED: syntax error in lib/ash/drupal.rb
+* cleaned up some mis-indented lines in lib/ash/drupal.rb
+
+== 1.1.12
+* Applied dficker's proposed patch for issue #11
+* Added the `remote_dir_exists?` method to the `lib/ash/common.rb` 
+** TODO: better tasks to test if a remote directory exists
+* Added some Drupal Ubercart methods to help secure Ubercart encryption keys and downloadable products
+
 == 1.1.11
 * Added functionality to help fascilitate migrating local databases to remote and back
 

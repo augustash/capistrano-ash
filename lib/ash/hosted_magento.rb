@@ -11,15 +11,11 @@ configuration.load do
   # Default variables
   # --------------------------------------------
   set :scm_username, "remotesvn"
-  
-  # --------------------------------------------
-  # Task chains
-  # --------------------------------------------
 
   # --------------------------------------------
   # Overloaded tasks
   # --------------------------------------------
-  namespace :deploy do    
+  namespace :deploy do
     desc "Setup shared application directories and permissions after initial setup"
     task :setup_shared do
       # remove Capistrano specific directories
@@ -41,7 +37,7 @@ configuration.load do
     task :finalize_update, :roles => :web, :except => { :no_release => true } do
       # synchronize media directory with shared data
       run "rsync -rltDvzog #{latest_release}/media/ #{shared_path}/media/"
-      
+
       # put ".htaccess" in place
       run "mv #{latest_release}/htaccess.dist #{latest_release}/.htaccess"
 
@@ -55,14 +51,14 @@ configuration.load do
       ash.fixperms
     end
   end
-  
+
   namespace :magento do
     desc "Purge Magento cache directory"
     task :purge_cache, :roles => :web, :except => { :no_release => true } do
       run "rm -Rf #{shared_path}/var/cache/*"
     end
   end
-  
+
   # --------------------------------------------
   # Overloaded Ash tasks
   # --------------------------------------------
