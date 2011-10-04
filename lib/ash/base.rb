@@ -53,7 +53,7 @@ configuration.load do
     "RELEASE*", "*.rb", "*.sql", "nbproject", "_template"]
 
   # phpMyAdmin version
-  set :pma_version,       "3.3.8"
+  set :pma_version,       "3.4.5"
 
   # Backups Path
   _cset(:backups_path)    { File.join(deploy_to, "backups") }
