@@ -21,3 +21,13 @@ end
 def remote_file_exists?(full_path)
   'true' ==  capture("if [ -e #{full_path} ]; then echo 'true'; fi").strip
 end
+
+# Test to see if a directory exists on a remote
+# server by providing the full path to the expected
+# directory
+#
+# Params:
+#   +dir_path+
+def remote_dir_exists?(dir_path)
+  'true' == capture("if [[ -d #{dir_path} ]]; then echo 'true'; fi").strip
+end
