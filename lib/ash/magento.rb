@@ -12,7 +12,7 @@ configuration.load do
   # Task chains
   # --------------------------------------------
   after "deploy:setup", "deploy:setup_local"
-  after "deploy:setup_shared", "pma:install"
+#  after "deploy:setup_shared", "pma:install"
   after "deploy:finalize_update", "magento:activate_config"
   after "deploy:symlink", "magento:symlink"
   after "deploy", "magento:purge_cache"
