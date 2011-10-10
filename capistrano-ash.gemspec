@@ -34,7 +34,7 @@ Gem::Specification.new do |s|
   ]
   s.homepage = %q{https://github.com/augustash/capistrano-ash}
   s.require_paths = [%q{lib}]
-  s.rubygems_version = %q{1.8.6}
+  s.rubygems_version = %q{1.8.11}
   s.summary = %q{Useful task libraries for August Ash recipes for Capistrano}
 
   if s.respond_to? :specification_version then
