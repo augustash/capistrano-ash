@@ -16,7 +16,7 @@ configuration.load do
 
   # Set default stages
   set :stages, %w(staging production)
-  set :default_stge, "staging"
+  set :default_stage, "staging"
 
   # --------------------------------------------
   # Task chains
