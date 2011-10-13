@@ -4,12 +4,12 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{capistrano-ash}
+  s.name = "capistrano-ash"
   s.version = "1.1.16"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["August Ash"]
-  s.date = "2011-10-10"
+  s.date = "2011-10-13"
   s.description = "August Ash recipes for Capistrano"
   s.email = "code@augustash.com"
   s.extra_rdoc_files = [
@@ -32,10 +32,10 @@ Gem::Specification.new do |s|
     "lib/ash/zend_doctrine.rb",
     "lib/ash/zend_doctrine_shared_hosting.rb"
   ]
-  s.homepage = %q{https://github.com/augustash/capistrano-ash}
-  s.require_paths = [%q{lib}]
-  s.rubygems_version = %q{1.8.11}
-  s.summary = %q{Useful task libraries for August Ash recipes for Capistrano}
+  s.homepage = "https://github.com/augustash/capistrano-ash"
+  s.require_paths = ["lib"]
+  s.rubygems_version = "1.8.10"
+  s.summary = "Useful task libraries for August Ash recipes for Capistrano"
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
@@ -46,3 +46,4 @@ Gem::Specification.new do |s|
   else
   end
 end
+
