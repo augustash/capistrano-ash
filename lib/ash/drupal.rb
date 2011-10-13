@@ -196,8 +196,8 @@ configuration.load do
       end
 
       desc <<-DESC
-        Stubbed: Moves downloadable files from the public directory (Drupal root) 
-        to the shared directories
+        Moves downloadable files from the public directory (Drupal root) to the shared 
+        directories
 
         Example:
             sites/abc/files/ubercart/products 
@@ -230,8 +230,8 @@ configuration.load do
       end
 
       desc <<-DESC
-        Stubbed: Moves encryption key files from the public directory (Drupal root) 
-        to the shared directories
+        Moves encryption key files from the public directory (Drupal root) to the shared 
+        directories
 
         Example:
             sites/abc/files/ubercart/keys 
@@ -252,7 +252,6 @@ configuration.load do
           run "#{drush_bin} -l #{url} -r #{latest_release} vset --yes uc_credit_encryption_path ../../shared/#{url}/#{uc_root}/#{uc_encryption_keys_root}"
         end
       end
-    
     end
   end
 end

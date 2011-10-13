@@ -16,6 +16,16 @@ def text_prompt(prompt="Value: ")
   Capistrano::CLI.ui.ask(prompt) { |q| q.echo = true }
 end
 
+# Check if a file exists by providing the full path to the expected file location
+def local_file_exists?(full_path)
+  File.exists?(full_path)
+end
+
+# Check if a directory exists by providing the full path to the expected location
+def local_dir_exists?(full_path)
+  File.directory?(full_path)
+end
+
 # Test to see if a file exists by providing 
 # the full path to the expected file location
 def remote_file_exists?(full_path)

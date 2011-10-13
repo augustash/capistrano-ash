@@ -1,3 +1,6 @@
+== 1.1.16
+* FIXED: added missing function to make "db" migration tasks work correctly
+
 == 1.1.13
 * FIXED: syntax error in lib/ash/drupal.rb
 * cleaned up some mis-indented lines in lib/ash/drupal.rb
