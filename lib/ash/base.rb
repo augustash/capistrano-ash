@@ -86,6 +86,25 @@ configuration.load do
   # Overloaded tasks
   # --------------------------------------------
   namespace :deploy do
+    desc <<-DESC
+      Prepares one or more servers for deployment. Before you can use any \
+      of the Capistrano deployment tasks with your project, you will need to \
+      make sure all of your servers have been prepared with `cap deploy:setup'. When \
+      you add a new server to your cluster, you can easily run the setup task \
+      on just that server by specifying the HOSTS environment variable:
+
+        $ cap HOSTS=new.server.com deploy:setup
+
+      It is safe to run this task on servers that have already been set up; it \
+      will not destroy any deployed revisions or data.
+    DESC
+    task :setup, :except => { :no_release => true } do
+      dirs = [deploy_to, releases_path, shared_path]
+      dirs += shared_children.map { |d| File.join(shared_path, d.split('/').last) }
+      run "#{try_sudo} mkdir -p #{dirs.join(' ')}"
+      run "#{try_sudo} chmod 755 #{dirs.join(' ')}" if fetch(:group_writable, true)
+    end
+    
     desc "Setup shared application directories and permissions after initial setup"
     task :setup_shared do
       puts "STUB: Setup"
