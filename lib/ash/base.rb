@@ -56,8 +56,9 @@ configuration.load do
   set :pma_version,       "3.4.5"
 
   # Backups Path
-  _cset(:backups_path)    { File.join(deploy_to, "backups") }
-  _cset(:backups)         { capture("ls -x #{backups_path}", :except => { :no_release => true }).split.sort }
+  _cset(:backups_path)      { File.join(deploy_to, "backups") }
+  _cset(:tmp_backups_path)  { File.join("#{backups_path}", "tmp") }
+  _cset(:backups)           { capture("ls -x #{backups_path}", :except => { :no_release => true }).split.sort }
 
   # Define which files or directories you want to exclude from being backed up
   _cset(:backup_exclude)  { [] }
@@ -299,16 +300,16 @@ configuration.load do
         end
 
         # Copy the previous release to the /tmp directory
-        logger.debug "Copying previous release to the /tmp/#{release_name} directory"
-        run "rsync -avzrtpL #{exclude_string} #{current_path}/ /tmp/#{release_name}/"
+        logger.debug "Copying previous release to the #{tmp_backups_path}/#{release_name} directory"
+        run "rsync -avzrtpL #{exclude_string} #{current_path}/ #{tmp_backups_path}/#{release_name}/"
         # create the tarball of the previous release
         set :archive_name, "release_B4_#{release_name}.tar.gz"
         logger.debug "Creating a Tarball of the previous release in #{backups_path}/#{archive_name}"
-        run "cd /tmp && tar -cvpf - ./#{release_name}/ | gzip -c --best > #{backups_path}/#{archive_name}"
+        run "cd #{tmp_backups_path} && tar -cvpf - ./#{release_name}/ | gzip -c --best > #{backups_path}/#{archive_name}"
 
         # remove the the temporary copy
         logger.debug "Removing the tempory copy"
-        run "rm -rf /tmp/#{release_name}"
+        run "rm -rf #{tmp_backups_path}/#{release_name}"
       else
         logger.important "no previous release to backup; backup of files skipped"
       end
