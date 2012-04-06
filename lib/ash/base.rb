@@ -37,6 +37,8 @@ configuration.load do
   set :dbuser,            proc{text_prompt("Database username: ")}
   set :dbpass,            proc{Capistrano::CLI.password_prompt("Database password for '#{dbuser}':")}
   set :dbname,            proc{text_prompt("Database name: ")}
+  _cset :mysqldump,       "mysqldump"
+  _cset :dump_options,    "--single-transaction --create-options --quick"
 
   # Source Control
   set :group_writable,    false
@@ -201,7 +203,10 @@ configuration.load do
     end
 
     task :local_export do
-      system "mysqldump --opt -h#{db_local_host} -u#{db_local_user} -p#{db_local_pass} #{db_local_name} | gzip -c --best > #{db_local_name}.sql.gz"
+      mysqldump     = fetch(:mysqldump, "mysqldump")
+      dump_options  = fetch(:dump_options, "--single-transaction --create-options --quick")
+      
+      system "#{mysqldump} #{dump_options} --opt -h#{db_local_host} -u#{db_local_user} -p#{db_local_pass} #{db_local_name} | gzip -c --best > #{db_local_name}.sql.gz"
     end
 
     desc "Upload locally created MySQL dumpfile to remote server via SCP"
@@ -231,7 +236,10 @@ configuration.load do
 
     desc "Create a compressed MySQL dumpfile of the remote database"
     task :remote_export, :roles => :db do
-      run "mysqldump --opt -h#{db_remote_host} -u#{db_remote_user} -p#{db_remote_pass} #{db_remote_name} | gzip -c --best > #{deploy_to}/#{db_remote_name}.sql.gz"
+      mysqldump     = fetch(:mysqldump, "mysqldump")
+      dump_options  = fetch(:dump_options, "--single-transaction --create-options --quick")
+      
+      run "#{mysqldump} #{dump_options} --opt -h#{db_remote_host} -u#{db_remote_user} -p#{db_remote_pass} #{db_remote_name} | gzip -c --best > #{deploy_to}/#{db_remote_name}.sql.gz"
     end
 
     desc "Download remotely created MySQL dumpfile to local machine via SCP"
@@ -273,6 +281,7 @@ configuration.load do
     task :default do
       db
       web
+      cleanup
     end
 
     desc <<-DESC
@@ -318,11 +327,14 @@ configuration.load do
     desc "Perform a backup of database files"
     task :db, :roles => :db do
       if previous_release
+        mysqldump     = fetch(:mysqldump, "mysqldump")
+        dump_options  = fetch(:dump_options, "--single-transaction --create-options --quick")
+        
         puts "Backing up the database now and putting dump file in the previous release directory"
         # define the filename (include the current_path so the dump file will be within the directory)
         filename = "#{current_path}/#{dbname}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
         # dump the database for the proper environment
-        run "mysqldump -u #{dbuser} -p #{dbname} | gzip -c --best > #{filename}" do |ch, stream, out|
+        run "#{mysqldump} #{dump_options} -u #{dbuser} -p #{dbname} | gzip -c --best > #{filename}" do |ch, stream, out|
             ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
         end
       else

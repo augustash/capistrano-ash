@@ -94,10 +94,10 @@ configuration.load do
 
     desc "Symlink shared directories"
     task :symlink, :roles => :web, :except => { :no_release => true } do
-      run "ln -nfs #{shared_path}/includes #{current_release}/includes"
-      run "ln -nfs #{shared_path}/media #{current_release}/media"
-      run "ln -nfs #{shared_path}/sitemap #{current_release}/sitemap"
-      run "ln -nfs #{shared_path}/var #{current_release}/var"
+      run "ln -nfs #{shared_path}/includes #{latest_release}/includes"
+      run "ln -nfs #{shared_path}/media #{latest_release}/media"
+      run "ln -nfs #{shared_path}/sitemap #{latest_release}/sitemap"
+      run "ln -nfs #{shared_path}/var #{latest_release}/var"
     end
 
     desc "Purge Magento cache directory"
