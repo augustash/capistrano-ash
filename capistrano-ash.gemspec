@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["August Ash"]
-  s.date = "2011-10-13"
+  s.date = "2012-04-06"
   s.description = "August Ash recipes for Capistrano"
   s.email = "code@augustash.com"
   s.extra_rdoc_files = [
@@ -34,7 +34,7 @@ Gem::Specification.new do |s|
   ]
   s.homepage = "https://github.com/augustash/capistrano-ash"
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.10"
+  s.rubygems_version = "1.8.21"
   s.summary = "Useful task libraries for August Ash recipes for Capistrano"
 
   if s.respond_to? :specification_version then
