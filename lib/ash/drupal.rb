@@ -118,7 +118,7 @@ configuration.load do
         run "ln -nfs #{shared_path}/#{url}/files #{latest_release}/sites/#{url}/files"
         run "#{drush_bin} -l #{url} -r #{current_path} vset --yes file_directory_path sites/#{url}/files"
       end
-   end
+    end
    
     desc <<-DESC
       Symlinks the appropriate environment's settings file within the proper sites directory
@@ -128,31 +128,31 @@ configuration.load do
         settings.php.<environment>    => deprecated
     DESC
     task :symlink_config_file, :roles => :web, :except => { :no_release => true} do
-     multisites.each_pair do |folder, url|
-       drupal_app_site_dir = " #{latest_release}/sites/#{url}"
-       
-       case true
-         when remote_file_exists?("#{drupal_app_site_dir}/settings.#{stage}.php")
-           run "ln -nfs #{drupal_app_site_dir}/settings.#{stage}.php #{drupal_app_site_dir}/settings.php"
-         when remote_file_exists?("#{drupal_app_site_dir}/settings.php.#{stage}")
-           run "ln -nfs #{drupal_app_site_dir}/settings.php.#{stage} #{drupal_app_site_dir}/settings.php"
-         else
-           logger.important "Failed to symlink the settings.php file in #{drupal_app_site_dir} because an unknown pattern was used"
-       end
-     end
-   end
+      multisites.each_pair do |folder, url|
+        drupal_app_site_dir = " #{latest_release}/sites/#{url}"
+        
+        case true
+          when remote_file_exists?("#{drupal_app_site_dir}/settings.#{stage}.php")
+            run "ln -nfs #{drupal_app_site_dir}/settings.#{stage}.php #{drupal_app_site_dir}/settings.php"
+          when remote_file_exists?("#{drupal_app_site_dir}/settings.php.#{stage}")
+            run "ln -nfs #{drupal_app_site_dir}/settings.php.#{stage} #{drupal_app_site_dir}/settings.php"
+          else
+            logger.important "Failed to symlink the settings.php file in #{drupal_app_site_dir} because an unknown pattern was used"
+        end
+      end
+    end
 
     desc "Replace local database paths with remote paths"
     task :updatedb, :roles => :web, :except => { :no_release => true } do
-     multisites.each_pair do |folder, url|
+      multisites.each_pair do |folder, url|
        run "#{drush_bin} -l #{url} -r #{current_path} sqlq \"UPDATE {files} SET filepath = REPLACE(filepath,'sites/#{folder}/files','sites/#{url}/files');\""
-     end
-   end
+      end
+    end
 
     desc "Clear all Drupal cache"
     task :clearcache, :roles => :web, :except => { :no_release => true } do
       multisites.each_pair do |folder, url|
-       run "#{drush_bin} -l #{url} -r #{current_path} cache-clear all"
+        run "#{drush_bin} -l #{url} -r #{current_path} cache-clear all"
       end
     end
   
@@ -196,8 +196,8 @@ configuration.load do
       end
 
       desc <<-DESC
-        Stubbed: Moves downloadable files from the public directory (Drupal root) 
-        to the shared directories
+        Moves downloadable files from the public directory (Drupal root) to the shared 
+        directories
 
         Example:
             sites/abc/files/ubercart/products 
@@ -230,8 +230,8 @@ configuration.load do
       end
 
       desc <<-DESC
-        Stubbed: Moves encryption key files from the public directory (Drupal root) 
-        to the shared directories
+        Moves encryption key files from the public directory (Drupal root) to the shared 
+        directories
 
         Example:
             sites/abc/files/ubercart/keys 
@@ -252,6 +252,6 @@ configuration.load do
           run "#{drush_bin} -l #{url} -r #{latest_release} vset --yes uc_credit_encryption_path ../../shared/#{url}/#{uc_root}/#{uc_encryption_keys_root}"
         end
       end
-    
+    end
   end
 end
