@@ -126,8 +126,8 @@ configuration.load do
     desc "Set standard permissions for Ash servers"
     task :fixperms, :roles => :web, :except => { :no_release => true } do
       # chmod the files and directories.
-      try_sudo "find #{latest_release} -type d -exec chmod 755 {} \\;"
-      try_sudo "find #{latest_release} -type f -exec chmod 644 {} \\;"
+      set_perms_dirs("#{latest_release}")
+      set_perms_files("#{latest_release}")
     end
 
     desc "Test: Task used to verify Capistrano is working. Prints operating system name."
@@ -359,6 +359,12 @@ configuration.load do
         archives = (backups - backups.last(count)).map { |backup|
           File.join(backups_path, backup) }.join(" ")
 
+        # fix permissions on the the files and directories before removing them
+        archives.split(" ").each do |backup|
+          set_perms_dirs("#{backup}", 755)
+          set_perms_files("#{backup}", 644)
+        end
+        
         try_sudo "rm -rf #{archives}"
       end
     end
