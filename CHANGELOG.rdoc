@@ -3,7 +3,9 @@
 * abstracted the ash:fixperms functionality into 2 methods (set_perms_files and set_perms_dirs) in common.rb that take 2 arguments: the file path to the desired directory and the desired permissions
 * changed default location for storing temporary backups from the server's /tmp directory to the :deploy_to/backups/tmp directory
 * added the cleanup task to the backup:default task so the chain of tasks no longer need after "backup", "backup:cleanup"
-* automatically fix permissions of archives before trying to delete old backup files  
+* automatically fix permissions of archives before trying to delete old backup files
+* allow user to set the path to the mysqldump command
+* set default mysqldump options to be "--single-transaction --create-options --quick" which will work for INNODB tables but not for MYISAM tables
 
 == 1.1.16
 * FIXED: added missing function to make "db" migration tasks work correctly
