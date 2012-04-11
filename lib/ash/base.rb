@@ -169,21 +169,21 @@ configuration.load do
   # --------------------------------------------
   namespace :db do
     desc "Migrate remote application database to local server"
-    task :to_local do
+    task :to_local, :roles => :db, :except => { :no_release => true } do
       remote_export
       remote_download
       local_import
     end
 
     desc "Migrate local application database to remote server"
-    task :to_remote do
+    task :to_remote, :roles => :db, :except => { :no_release => true } do
       local_export
       local_upload
       remote_import
     end
 
     desc "Handles importing a MySQL database dump file. Uncompresses the file, does regex replacements, and imports."
-    task :local_import do
+    task :local_import, :roles => :db do
       # check for compressed file and decompress
       if local_file_exists?("#{db_remote_name}.sql.gz")
         system "gunzip -f #{db_remote_name}.sql.gz"
@@ -210,7 +210,7 @@ configuration.load do
     end
 
     desc "Upload locally created MySQL dumpfile to remote server via SCP"
-    task :local_upload do
+    task :local_upload, :roles => :db do
       upload "#{db_local_name}.sql.gz", "#{deploy_to}/#{db_local_name}.sql.gz", :via => :scp
     end
 
@@ -243,7 +243,7 @@ configuration.load do
     end
 
     desc "Download remotely created MySQL dumpfile to local machine via SCP"
-    task :remote_download do
+    task :remote_download, :roles => :db do
       download "#{deploy_to}/#{db_remote_name}.sql.gz", "#{db_remote_name}.sql.gz", :via => :scp
     end
   end
