@@ -13,6 +13,8 @@ configuration.load do
   # --------------------------------------------
   proc{_cset( :multisites, {"#{application}" => "#{application}"} )}
   set :drush_bin, "drush"
+  _cset :dump_options,    "" # blank options b/c of MYISAM engine (unless anyone knows options that should be included)
+  
   
   # --------------------------------------------
   # Ubercart Files/Folders
@@ -86,6 +88,27 @@ configuration.load do
         end
       end
     end
+  end
+  
+  # --------------------------------------------
+  # Remote/Local database migration tasks
+  # --------------------------------------------
+  namespace :db do
+    task :local_export do
+      mysqldump     = fetch(:mysqldump, "mysqldump")
+      dump_options  = fetch(:dump_options, "")
+      
+      system "#{mysqldump} #{dump_options} --opt -h#{db_local_host} -u#{db_local_user} -p#{db_local_pass} #{db_local_name} | gzip -c --best > #{db_local_name}.sql.gz"
+    end
+    
+    desc "Create a compressed MySQL dumpfile of the remote database"
+    task :remote_export, :roles => :db do
+      mysqldump     = fetch(:mysqldump, "mysqldump")
+      dump_options  = fetch(:dump_options, "")
+      
+      run "#{mysqldump} #{dump_options} --opt -h#{db_remote_host} -u#{db_remote_user} -p#{db_remote_pass} #{db_remote_name} | gzip -c --best > #{deploy_to}/#{db_remote_name}.sql.gz"
+    end
+  
   end
 
   namespace :backup do
