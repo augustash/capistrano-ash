@@ -143,7 +143,7 @@ configuration.load do
         filename = "#{backups_path}/#{dbname}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
 
         # dump the database for the proper environment
-        run "#{mysldump} #{dump_options} -u #{dbuser} -p #{dbname} | gzip -c --best > #{filename}" do |ch, stream, out|
+        run "#{mysqldump} #{dump_options} -u #{dbuser} -p #{dbname} | gzip -c --best > #{filename}" do |ch, stream, out|
           ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
         end
       else
