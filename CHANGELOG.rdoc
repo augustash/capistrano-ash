@@ -1,3 +1,10 @@
+== 1.1.18
+* FIXED: deploy:setup_backup now also attempts to create the :tmp_backups_path directory
+* added deploy:setup_backup to the backup:default stack so it's always called first (no more messy task chains!)
+* altered Magento's backup:default task to only do a database dump to the backups directory. File level backup will come at a later date.
+* altered Drupal's default for :dump_options which are now empty (equivalent to a run-of-the-mill mysqldump command) due to MYISAM vs INNODB concerns
+
+
 == 1.1.17
 * FIXED: deploy:setup now creates directories with 755 permissions (instead of g+w)
 * abstracted the ash:fixperms functionality into 2 methods (set_perms_files and set_perms_dirs) in common.rb that take 2 arguments: the file path to the desired directory and the desired permissions
