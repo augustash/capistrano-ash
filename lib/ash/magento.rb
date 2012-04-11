@@ -130,6 +130,7 @@ configuration.load do
   namespace :backup do
     desc "Perform a backup of ONLY database SQL files"
     task :default do
+      deploy.setup_backup
       db
       cleanup
     end
