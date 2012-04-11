@@ -115,7 +115,7 @@ configuration.load do
 
     desc "Setup backup directory for database and web files"
     task :setup_backup, :except => { :no_release => true } do
-      run "#{try_sudo} mkdir -p #{backups_path} && #{try_sudo} chmod 755 #{backups_path}"
+      run "#{try_sudo} mkdir -p #{backups_path} #{tmp_backups_path} && #{try_sudo} chmod 755 #{backups_path}"
     end
   end
 
@@ -279,6 +279,7 @@ configuration.load do
   namespace :backup do
     desc "Perform a backup of web and database files"
     task :default do
+      deploy.setup_backup
       db
       web
       cleanup
