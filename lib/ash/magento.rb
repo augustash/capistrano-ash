@@ -123,5 +123,33 @@ configuration.load do
       end
     end
   end
+  
+  # --------------------------------------------
+  # Override the base.rb backup tasks
+  # --------------------------------------------
+  namespace :backup do
+    desc "Perform a backup of ONLY database SQL files"
+    task :default do
+      db
+      cleanup
+    end
+
+    desc "Perform a backup of database files"
+    task :db, :roles => :db do
+      if previous_release
+        puts "Backing up the database now and putting dump file in the #{stage}/backups directory"
+
+        # define the filename (dump the SQL file directly to the backups directory)
+        filename = "#{backups_path}/#{dbname}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
+
+        # dump the database for the proper environment
+        run "#{mysldump} #{dump_options} -u #{dbuser} -p #{dbname} | gzip -c --best > #{filename}" do |ch, stream, out|
+          ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
+        end
+      else
+        logger.important "no previous release to backup to; backup of database skipped"
+      end
+    end
+  end
 
 end
