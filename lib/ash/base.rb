@@ -107,7 +107,7 @@ configuration.load do
       run "#{try_sudo} mkdir -p #{dirs.join(' ')}"
       run "#{try_sudo} chmod 755 #{dirs.join(' ')}" if fetch(:group_writable, true)
     end
-    
+
     desc "Setup shared application directories and permissions after initial setup"
     task :setup_shared do
       puts "STUB: Setup"
@@ -116,6 +116,35 @@ configuration.load do
     desc "Setup backup directory for database and web files"
     task :setup_backup, :except => { :no_release => true } do
       run "#{try_sudo} mkdir -p #{backups_path} #{tmp_backups_path} && #{try_sudo} chmod 755 #{backups_path}"
+    end
+
+
+     desc <<-DESC
+      Clean up old releases. By default, the last 5 releases are kept on each \
+      server (though you can change this with the keep_releases variable). All \
+      other deployed revisions are removed from the servers. By default, this \
+      will use sudo to clean up the old releases, but if sudo is not available \
+      for your environment, set the :use_sudo variable to false instead. \
+
+      Overridden to set/reset file and directory permissions
+    DESC
+    task :cleanup, :except => { :no_release => true } do
+      count = fetch(:keep_releases, 5).to_i
+      local_releases = capture("ls -xt #{releases_path}").split.reverse
+      if count >= local_releases.length
+        logger.important "no old releases to clean up"
+      else
+        logger.info "keeping #{count} of #{local_releases.length} deployed releases"
+        directories = (local_releases - local_releases.last(count)).map { |release|
+          File.join(releases_path, release) }.join(" ")
+
+        directories.each do |dir|
+          set_perms_dirs(dir)
+          set_perms_files(dir)
+        end
+
+        try_sudo "rm -rf #{directories}"
+      end
     end
   end
 
@@ -205,7 +234,7 @@ configuration.load do
     task :local_export do
       mysqldump     = fetch(:mysqldump, "mysqldump")
       dump_options  = fetch(:dump_options, "--single-transaction --create-options --quick")
-      
+
       system "#{mysqldump} #{dump_options} --opt -h#{db_local_host} -u#{db_local_user} -p#{db_local_pass} #{db_local_name} | gzip -c --best > #{db_local_name}.sql.gz"
     end
 
@@ -238,7 +267,7 @@ configuration.load do
     task :remote_export, :roles => :db do
       mysqldump     = fetch(:mysqldump, "mysqldump")
       dump_options  = fetch(:dump_options, "--single-transaction --create-options --quick")
-      
+
       run "#{mysqldump} #{dump_options} --opt -h#{db_remote_host} -u#{db_remote_user} -p#{db_remote_pass} #{db_remote_name} | gzip -c --best > #{deploy_to}/#{db_remote_name}.sql.gz"
     end
 
@@ -312,6 +341,13 @@ configuration.load do
         # Copy the previous release to the /tmp directory
         logger.debug "Copying previous release to the #{tmp_backups_path}/#{release_name} directory"
         run "rsync -avzrtpL #{exclude_string} #{current_path}/ #{tmp_backups_path}/#{release_name}/"
+
+        # --------------------------
+        # SET/RESET PERMISSIONS
+        # --------------------------
+        set_perms_dirs("#{tmp_backups_path}/#{release_name}", 755)
+        set_perms_files("#{tmp_backups_path}/#{release_name}", 644)
+
         # create the tarball of the previous release
         set :archive_name, "release_B4_#{release_name}.tar.gz"
         logger.debug "Creating a Tarball of the previous release in #{backups_path}/#{archive_name}"
@@ -330,7 +366,7 @@ configuration.load do
       if previous_release
         mysqldump     = fetch(:mysqldump, "mysqldump")
         dump_options  = fetch(:dump_options, "--single-transaction --create-options --quick")
-        
+
         puts "Backing up the database now and putting dump file in the previous release directory"
         # define the filename (include the current_path so the dump file will be within the directory)
         filename = "#{current_path}/#{dbname}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
@@ -365,7 +401,7 @@ configuration.load do
           set_perms_dirs("#{backup}", 755)
           set_perms_files("#{backup}", 644)
         end
-        
+
         try_sudo "rm -rf #{archives}"
       end
     end
