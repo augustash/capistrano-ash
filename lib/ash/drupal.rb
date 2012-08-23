@@ -14,12 +14,12 @@ configuration.load do
   proc{_cset( :multisites, {"#{application}" => "#{application}"} )}
   set :drush_bin, "drush"
   _cset :dump_options,    "" # blank options b/c of MYISAM engine (unless anyone knows options that should be included)
-  
-  
+
+
   # --------------------------------------------
   # Ubercart Files/Folders
   #   assumes ubercart files are located
-  #   within a files/ubercart directory 
+  #   within a files/ubercart directory
   #   for each multisite
   # --------------------------------------------
   set :uc_root, "ubercart"
@@ -31,9 +31,14 @@ configuration.load do
   # --------------------------------------------
   after "deploy:setup", "deploy:setup_local"
   after "deploy:finalize_update", "ash:fixperms"
-  after "deploy:symlink", "drupal:symlink"
+  # after "deploy:create_symlink", "drupal:symlink"
+
+  # workaround for issues with capistrano v2.13.3 and
+  # before/after callbacks not firing for 'deploy:symlink'
+  # or 'deploy:create_symlink'
+  after "deploy", "drupal:symlink"
   after "drupal:symlink","drupal:protect"
-  after "deploy", "drupal:clearcache"
+  after "drupal:symlink", "drupal:clearcache"
   after "deploy", "deploy:cleanup"
 
   # --------------------------------------------
@@ -45,7 +50,7 @@ configuration.load do
       # attempt to create files needed for proper deployment
       system("cp .htaccess htaccess.dist")
     end
-    
+
     desc "Setup shared application directories and permissions after initial setup"
     task :setup_shared do
       # remove Capistrano specific directories
@@ -66,7 +71,7 @@ configuration.load do
     task :finalize_update, :roles => :web, :except => { :no_release => true } do
       # remove shared directories
       multisites.each_pair do |folder, url|
-        if folder != url 
+        if folder != url
           run "mv #{latest_release}/sites/#{folder} #{latest_release}/sites/#{url}"
         end
         run "rm -Rf #{latest_release}/sites/#{url}/files"
@@ -89,7 +94,7 @@ configuration.load do
       end
     end
   end
-  
+
   # --------------------------------------------
   # Remote/Local database migration tasks
   # --------------------------------------------
@@ -97,18 +102,18 @@ configuration.load do
     task :local_export do
       mysqldump     = fetch(:mysqldump, "mysqldump")
       dump_options  = fetch(:dump_options, "")
-      
+
       system "#{mysqldump} #{dump_options} --opt -h#{db_local_host} -u#{db_local_user} -p#{db_local_pass} #{db_local_name} | gzip -c --best > #{db_local_name}.sql.gz"
     end
-    
+
     desc "Create a compressed MySQL dumpfile of the remote database"
     task :remote_export, :roles => :db do
       mysqldump     = fetch(:mysqldump, "mysqldump")
       dump_options  = fetch(:dump_options, "")
-      
+
       run "#{mysqldump} #{dump_options} --opt -h#{db_remote_host} -u#{db_remote_user} -p#{db_remote_pass} #{db_remote_name} | gzip -c --best > #{deploy_to}/#{db_remote_name}.sql.gz"
     end
-  
+
   end
 
   namespace :backup do
@@ -137,15 +142,15 @@ configuration.load do
       multisites.each_pair do |folder, url|
         # symlinks the appropriate environment's settings.php file
         symlink_config_file
-        
+
         run "ln -nfs #{shared_path}/#{url}/files #{latest_release}/sites/#{url}/files"
         run "#{drush_bin} -l #{url} -r #{current_path} vset --yes file_directory_path sites/#{url}/files"
       end
     end
-   
+
     desc <<-DESC
       Symlinks the appropriate environment's settings file within the proper sites directory
-    
+
       Assumes the environment's settings file will be in one of two formats:
         settings.<environment>.php    => new default
         settings.php.<environment>    => deprecated
@@ -153,7 +158,7 @@ configuration.load do
     task :symlink_config_file, :roles => :web, :except => { :no_release => true} do
       multisites.each_pair do |folder, url|
         drupal_app_site_dir = " #{latest_release}/sites/#{url}"
-        
+
         case true
           when remote_file_exists?("#{drupal_app_site_dir}/settings.#{stage}.php")
             run "ln -nfs #{drupal_app_site_dir}/settings.#{stage}.php #{drupal_app_site_dir}/settings.php"
@@ -178,7 +183,7 @@ configuration.load do
         run "#{drush_bin} -l #{url} -r #{current_path} cache-clear all"
       end
     end
-  
+
     desc "Protect system files"
     task :protect, :roles => :web, :except => { :no_release => true } do
       multisites.each_pair do |folder, url|
@@ -196,7 +201,7 @@ configuration.load do
         # setup necessary directories within our shared directory
         setup_ubercart_shared
 
-        # move the sites/*/files/downloadable_products 
+        # move the sites/*/files/downloadable_products
         # to the shared directory via rsync
         secure_downloadable_files
 
@@ -219,15 +224,15 @@ configuration.load do
       end
 
       desc <<-DESC
-        Moves downloadable files from the public directory (Drupal root) to the shared 
+        Moves downloadable files from the public directory (Drupal root) to the shared
         directories
 
         Example:
-            sites/abc/files/ubercart/products 
-            sites/xyz/files/ubercart/downloadable_products 
+            sites/abc/files/ubercart/products
+            sites/xyz/files/ubercart/downloadable_products
 
           are moved to:
-            shared/abc/ubercart/products 
+            shared/abc/ubercart/products
             shared/xyz/ubercart/downloadable_products
       DESC
       task :secure_downloadable_files, :except => { :no_release => true } do
@@ -245,23 +250,23 @@ configuration.load do
           end
 
 
-          # update the ubercart's database tracking of where the 
-          # root file path is for downloadable products. This should 
+          # update the ubercart's database tracking of where the
+          # root file path is for downloadable products. This should
           # be set as relative to the root of the drupal directory
           run "#{drush_bin} -l #{url} -r #{latest_release} vset --yes uc_file_base_dir ../../shared/#{url}/#{uc_root}/#{uc_downloadable_products_root}"
         end
       end
 
       desc <<-DESC
-        Moves encryption key files from the public directory (Drupal root) to the shared 
+        Moves encryption key files from the public directory (Drupal root) to the shared
         directories
 
         Example:
-            sites/abc/files/ubercart/keys 
-            sites/xyz/files/ubercart/keys 
+            sites/abc/files/ubercart/keys
+            sites/xyz/files/ubercart/keys
 
           are moved to:
-            shared/abc/ubercart/keys 
+            shared/abc/ubercart/keys
             shared/xyz/ubercart/keys
       DESC
       task :secure_encryption_key, :roles => :web, :except => { :no_release => true } do
@@ -269,8 +274,8 @@ configuration.load do
         multisites.each_pair do |folder, url|
           run "mkdir -p #{shared_path}/#{url}/#{uc_root}/#{uc_encryption_keys_root}"
 
-          # update the ubercart's database tracking of where the 
-          # root file path is for encryption keys. This should 
+          # update the ubercart's database tracking of where the
+          # root file path is for encryption keys. This should
           # be set as relative to the root of the drupal directory
           run "#{drush_bin} -l #{url} -r #{latest_release} vset --yes uc_credit_encryption_path ../../shared/#{url}/#{uc_root}/#{uc_encryption_keys_root}"
         end

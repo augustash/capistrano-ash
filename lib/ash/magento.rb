@@ -14,8 +14,13 @@ configuration.load do
   after "deploy:setup", "deploy:setup_local"
 #  after "deploy:setup_shared", "pma:install"
   after "deploy:finalize_update", "magento:activate_config"
-  after "deploy:symlink", "magento:symlink"
-  after "deploy", "magento:purge_cache"
+  # after "deploy:create_symlink", "magento:symlink"
+
+  # workaround for issues with capistrano v2.13.3 and
+  # before/after callbacks not firing for 'deploy:symlink'
+  # or 'deploy:create_symlink'
+  after "deploy", "magento:symlink"
+  after "magento:symlink", "magento:purge_cache"
 
   # --------------------------------------------
   # Overloaded tasks
@@ -123,7 +128,7 @@ configuration.load do
       end
     end
   end
-  
+
   # --------------------------------------------
   # Override the base.rb backup tasks
   # --------------------------------------------
