@@ -65,7 +65,27 @@ configuration.load do
     task :symlink, :roles => :web, :except => { :no_release => true } do
       run "ln -nfs #{shared_path}/uploads #{current_release}/#{uploads_path}"
       run "ln -nfs #{shared_path}/cache #{current_release}/wp-content/cache"
-      run "ln -nfs #{latest_release}/wp-config.php.#{stage} #{latest_release}/wp-config.php"
+      symlink_confg
+    end
+
+    desc <<-DESC
+      Symlink the environment-specific wp-config file \
+      where <ENV> is the environment being deployed to.
+
+      Expected patterns are one of the two following examples:
+
+        wp-config.<ENV>.php
+        wp-config.php.<ENV>
+    DESC
+    task :symlink_confg, :roles => :web, :except => { :no_release => true } do
+      case true
+      when remote_file_exists?("#{latest_release}/wp-config.#{stage}.php")
+        run "ln -nfs #{latest_release}/wp-config.#{stage}.php #{latest_release}/wp-config.php"
+      when remote_file_exists?("#{latest_release}/wp-config.php.#{stage}")
+        run "ln -nfs #{latest_release}/wp-config.php.#{stage} #{latest_release}/wp-config.php"
+      else
+        logger.important "Failed to symlink the wp-config.php file in #{latest_release} because an unknown pattern was used"
+      end
     end
 
     desc "Set URL in database"
