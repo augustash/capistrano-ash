@@ -79,7 +79,7 @@ configuration.load do
     DESC
     task :symlink_confg, :roles => :web, :except => { :no_release => true } do
       case true
-      when remote_file_exists?("#{latest_release}/settings.#{stage}.php")
+      when remote_file_exists?("#{latest_release}/wp-config.#{stage}.php")
         run "ln -nfs #{latest_release}/wp-config.#{stage}.php #{latest_release}/wp-config.php"
       when remote_file_exists?("#{latest_release}/wp-config.php.#{stage}")
         run "ln -nfs #{latest_release}/wp-config.php.#{stage} #{latest_release}/wp-config.php"
