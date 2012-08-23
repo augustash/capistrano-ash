@@ -118,8 +118,15 @@ configuration.load do
       run "#{try_sudo} mkdir -p #{backups_path} #{tmp_backups_path} && #{try_sudo} chmod 755 #{backups_path}"
     end
 
+    desc <<-DESC
+      Deprecated API. This has become deploy:create_symlink, please update your recipes
+    DESC
+    task :symlink, :except => { :no_release => true } do
+      logger.important "[Deprecation Warning] This API has changed, please hook `deploy:create_symlink` instead of `deploy:symlink`."
+      create_symlink
+    end
 
-     desc <<-DESC
+    desc <<-DESC
       Clean up old releases. By default, the last 5 releases are kept on each \
       server (though you can change this with the keep_releases variable). All \
       other deployed revisions are removed from the servers. By default, this \
