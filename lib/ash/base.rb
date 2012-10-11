@@ -178,8 +178,16 @@ configuration.load do
 
     desc 'Copy distribution htaccess file'
     task :htaccess, :roles => :web do
-      run "mv #{latest_release}/htaccess.dist #{latest_release}/.htaccess" if
-        remote_file_exists?("#{latest_release}/htaccess.dist")
+      case true
+      when remote_file_exists?("#{latest_release}/htaccess.#{stage}.dist")
+        run "mv #{latest_release}/htaccess.#{stage}.dist #{latest_release}/.htaccess"
+      when remote_file_exists?("#{latest_release}/htaccess.#{stage}")
+        run "mv #{latest_release}/htaccess.#{stage} #{latest_release}/.htaccess"
+      when remote_file_exists?("#{latest_release}/htaccess.dist")
+        run "mv #{latest_release}/htaccess.dist #{latest_release}/.htaccess"
+      else
+        logger.important "Failed to move the .htaccess file in #{latest_release} because an unknown pattern was used"
+      end
     end
   end
 
