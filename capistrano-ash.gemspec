@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "capistrano-ash"
-  s.version = "1.2.1"
+  s.version = "1.2.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["August Ash"]
-  s.date = "2012-08-23"
+  s.date = "2012-10-11"
   s.description = "August Ash recipes for Capistrano"
   s.email = "code@augustash.com"
   s.extra_rdoc_files = [
