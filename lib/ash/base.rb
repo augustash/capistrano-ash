@@ -145,7 +145,7 @@ configuration.load do
         directories = (local_releases - local_releases.last(count)).map { |release|
           File.join(releases_path, release) }.join(" ")
 
-        directories.each do |dir|
+        directories.split(" ").each do |dir|
           set_perms_dirs(dir)
           set_perms_files(dir)
         end
@@ -178,8 +178,16 @@ configuration.load do
 
     desc 'Copy distribution htaccess file'
     task :htaccess, :roles => :web do
-      run "mv #{latest_release}/htaccess.dist #{latest_release}/.htaccess" if
-        remote_file_exists?("#{latest_release}/htaccess.dist")
+      case true
+      when remote_file_exists?("#{latest_release}/htaccess.#{stage}.dist")
+        run "mv #{latest_release}/htaccess.#{stage}.dist #{latest_release}/.htaccess"
+      when remote_file_exists?("#{latest_release}/htaccess.#{stage}")
+        run "mv #{latest_release}/htaccess.#{stage} #{latest_release}/.htaccess"
+      when remote_file_exists?("#{latest_release}/htaccess.dist")
+        run "mv #{latest_release}/htaccess.dist #{latest_release}/.htaccess"
+      else
+        logger.important "Failed to move the .htaccess file in #{latest_release} because an unknown pattern was used"
+      end
     end
   end
 

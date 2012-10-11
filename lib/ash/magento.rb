@@ -127,6 +127,18 @@ configuration.load do
         break if stream == :err
       end
     end
+
+    desc "Clear the Magento Cache"
+    task :cc, :roles => [:web, :app], :except => { :no_release => true } do
+      magento.purge_cache
+      sudo "rm -rf #{shared_path}/var/full_page_cache/*"
+    end
+
+    desc "Enable display errors"
+    task :enable_dev, :roles => :web, :except => { :no_release => true } do
+      run "perl -pi -e 's/#ini_set/ini_set/g' #{latest_release}/index.php"
+    end
+
   end
 
   # --------------------------------------------
