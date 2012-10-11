@@ -145,7 +145,7 @@ configuration.load do
         directories = (local_releases - local_releases.last(count)).map { |release|
           File.join(releases_path, release) }.join(" ")
 
-        directories.each do |dir|
+        directories.split(" ").each do |dir|
           set_perms_dirs(dir)
           set_perms_files(dir)
         end
