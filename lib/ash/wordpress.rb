@@ -61,10 +61,10 @@ configuration.load do
   # Wordpress-specific methods
   # --------------------------------------------
   namespace :wordpress do
-    desc "Links the correct settings file"
+    desc "Links the correct settings file as well as the uploads and cache directories"
     task :symlink, :roles => :web, :except => { :no_release => true } do
-      run "ln -nfs #{shared_path}/uploads #{current_release}/#{uploads_path}"
-      run "ln -nfs #{shared_path}/cache #{current_release}/wp-content/cache"
+      run "ln -nfs #{shared_path}/uploads #{latest_release}/#{uploads_path}"
+      run "ln -nfs #{shared_path}/cache #{latest_release}/wp-content/cache"
       symlink_confg
     end
 
