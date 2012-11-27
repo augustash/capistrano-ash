@@ -1,3 +1,6 @@
+== 1.2.3
+* FIXED: Issue #27 - Wordpress symlinking uploads and cache directories to the previous release instead of the newest release
+
 == 1.1.18
 * FIXED: deploy:setup_backup now also attempts to create the :tmp_backups_path directory
 * added deploy:setup_backup to the backup:default stack so it's always called first (no more messy task chains!)
@@ -23,7 +26,7 @@
 
 == 1.1.12
 * Applied dficker's proposed patch for issue #11
-* Added the `remote_dir_exists?` method to the `lib/ash/common.rb` 
+* Added the `remote_dir_exists?` method to the `lib/ash/common.rb`
 ** TODO: better tasks to test if a remote directory exists
 * Added some Drupal Ubercart methods to help secure Ubercart encryption keys and downloadable products
 
@@ -68,7 +71,7 @@
 
 == 0.0.13
 
-* Jake added WordPress recipe 
+* Jake added WordPress recipe
 
 == 0.0.12
 
