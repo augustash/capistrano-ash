@@ -146,6 +146,11 @@ configuration.load do
           File.join(releases_path, release) }.join(" ")
 
         directories.split(" ").each do |dir|
+          # adding a chown -R method to fix permissions on the directory
+          # this should help with issues related to permission denied
+          # as in issues #28 and #30
+          try_sudo "chown -R #{user}:#{user} #{dir}"
+
           set_perms_dirs(dir)
           set_perms_files(dir)
         end
