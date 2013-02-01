@@ -51,7 +51,7 @@ configuration.load do
   set :deploy_via,        :remote_cache
   set :copy_strategy,     :checkout
   set :copy_compression,  :bz2
-  set :copy_exclude,      [".svn", ".DS_Store", "*.sample", "LICENSE*", "Capfile",
+  set :copy_exclude,      [".svn", ".git*", ".DS_Store", "*.sample", "LICENSE*", "Capfile",
     "RELEASE*", "*.rb", "*.sql", "nbproject", "_template"]
 
   # phpMyAdmin version
