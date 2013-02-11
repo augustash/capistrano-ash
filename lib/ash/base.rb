@@ -454,6 +454,7 @@ configuration.load do
 
           upload_command = "scp -r ./#{watched_dirs}/#{stylesheets_dir_name}/*.css #{user}@#{application}:#{latest_release}/#{watched_dirs}/#{stylesheets_dir_name}/"
 
+          # TODO: account for multiple servers so the upload is ran against each machine
           logger.info "running SCP command:"
           logger.debug upload_command
           system(upload_command)
@@ -466,6 +467,7 @@ configuration.load do
 
             upload_command = "scp -r ./#{dir}/#{stylesheets_dir_name}/*.css #{user}@#{application}:#{latest_release}/#{dir}/#{stylesheets_dir_name}/"
 
+            # TODO: account for multiple servers so the upload is ran against each machine
             logger.info "running SCP command:"
             logger.debug upload_command
             system(upload_command)
