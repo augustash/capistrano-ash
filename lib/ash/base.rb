@@ -434,7 +434,6 @@ configuration.load do
   # Compass/Sass compiling
   # --------------------------------------------
   namespace :compass do
-
     desc "Compile SASS stylesheets and upload to remote server"
     task :default do
       compile
@@ -447,30 +446,33 @@ configuration.load do
       watched_dirs          = fetch(:compass_watched_dirs, nil)
       stylesheets_dir_name  = fetch(:stylesheets_dir_name, 'stylesheets')
 
+      # finds all the web servers that we should upload stylesheets to
+      servers = find_servers :roles => :web
+
       if !watched_dirs.nil?
         if watched_dirs.is_a? String
           logger.debug "Uploading compiled stylesheets for #{watched_dirs}"
           logger.debug "trying to upload stylesheets from ./#{watched_dirs}/#{stylesheets_dir_name} -> #{latest_release}/#{watched_dirs}/#{stylesheets_dir_name}"
 
-          upload_command = "scp -r ./#{watched_dirs}/#{stylesheets_dir_name}/*.css #{user}@#{application}:#{latest_release}/#{watched_dirs}/#{stylesheets_dir_name}/"
+          servers.each do |web_server|
+            upload_command = "scp -r ./#{watched_dirs}/#{stylesheets_dir_name}/*.css #{user}@#{web_server}:#{latest_release}/#{watched_dirs}/#{stylesheets_dir_name}/"
 
-          # TODO: account for multiple servers so the upload is ran against each machine
-          logger.info "running SCP command:"
-          logger.debug upload_command
-          system(upload_command)
-
-          # upload("./#{watched_dirs}/stylesheets/global-crest.css", "#{latest_release}/#{watched_dirs}/stylesheets/", :via => :scp)
+            logger.info "running SCP command:"
+            logger.debug upload_command
+            system(upload_command)
+          end
         elsif watched_dirs.is_a? Array
           logger.debug "Uploading compiled stylesheets for #{watched_dirs.join(', ')}"
           watched_dirs.each do |dir|
             logger.debug "trying to upload stylesheets from ./#{dir}/#{stylesheets_dir_name}/ -> #{latest_release}/#{dir}/#{stylesheets_dir_name}/"
 
-            upload_command = "scp -r ./#{dir}/#{stylesheets_dir_name}/*.css #{user}@#{application}:#{latest_release}/#{dir}/#{stylesheets_dir_name}/"
+            servers.each do |web_server|
+              upload_command = "scp -r ./#{dir}/#{stylesheets_dir_name}/*.css #{user}@#{web_server}:#{latest_release}/#{dir}/#{stylesheets_dir_name}/"
 
-            # TODO: account for multiple servers so the upload is ran against each machine
-            logger.info "running SCP command:"
-            logger.debug upload_command
-            system(upload_command)
+              logger.info "running SCP command:"
+              logger.debug upload_command
+              system(upload_command)
+            end
           end
         else
           logger.debug "Unable to upload compiled stylesheets because :watched_dirs was neither a String nor an Array"
