@@ -1,3 +1,10 @@
+== 1.3.0
+* Version bump! - Adds tasks for compiling Sass/compass stylesheets and make it part of the deployment task chain. Although it's part of the task chain, it will only be ran if the `:compass_watched_dirs` is defined
+
+== 1.2.4
+* FIXED: Issue #30 - change ownership of directories/files in `deploy:cleanup` to avoid permission denied errors
+* FIXED: Issue #29 - Remove copying of .git files to live site
+
 == 1.2.3
 * FIXED: Issue #27 - Wordpress symlinking uploads and cache directories to the previous release instead of the newest release
 
