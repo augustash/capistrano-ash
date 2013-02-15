@@ -475,10 +475,10 @@ configuration.load do
             end
           end
         else
-          logger.debug "Unable to upload compiled stylesheets because :watched_dirs was neither a String nor an Array"
+          logger.debug "Unable to upload compiled stylesheets because :compass_watched_dirs was neither a String nor an Array"
         end
       else
-        logger.info "Skipping uploading of compiled stylesheets `compass:upload` because `:watched_dirs` wasn't set"
+        logger.info "Skipping uploading of compiled stylesheets `compass:upload` because `:compass_watched_dirs` wasn't set"
       end
     end
 

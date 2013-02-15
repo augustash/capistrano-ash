@@ -21,6 +21,7 @@ configuration.load do
   # or 'deploy:create_symlink'
   after "deploy", "magento:symlink"
   after "magento:symlink", "magento:purge_cache"
+  before "magento:purge_cache", "compass"
 
   # --------------------------------------------
   # Overloaded tasks
