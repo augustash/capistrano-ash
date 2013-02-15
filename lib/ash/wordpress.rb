@@ -23,6 +23,7 @@ configuration.load do
   # before/after callbacks not firing for 'deploy:symlink'
   # or 'deploy:create_symlink'
   after "deploy", "wordpress:symlink"
+  after "wordpress:symlink", "compass"
   after "wordpress:symlink", "ash:fixperms"
   after "ash:fixperms", "wordpress:protect"
 
