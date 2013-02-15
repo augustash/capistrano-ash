@@ -19,6 +19,7 @@ configuration.load do
   # before/after callbacks not firing for 'deploy:symlink'
   # or 'deploy:create_symlink'
   after "deploy", "zend:symlink"
+  after "zend:symlink", "compass"
   after "deploy", "deploy:cleanup"
 
   # --------------------------------------------
