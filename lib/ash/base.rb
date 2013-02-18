@@ -436,8 +436,11 @@ configuration.load do
   namespace :compass do
     desc "Compile SASS stylesheets and upload to remote server"
     task :default do
-      compile
-      upload_stylesheets
+      # optional way to skip compiling of stylesheets and just upload them to the servers
+      skip_compass_compile = fetch(:skip_compass_compile, false)
+
+      compass.compile unless skip_compass_compile
+      compass.upload_stylesheets
       ash.fixperms
     end
 
@@ -484,9 +487,11 @@ configuration.load do
 
     desc 'Compile minified version of CSS assets using Compass gem'
     task :compile, :roles => :web, :except => { :no_release => true } do
-      watched_dirs = fetch(:compass_watched_dirs, nil)
+      watched_dirs          = fetch(:compass_watched_dirs, nil)
+      skip_compass_compile  = fetch(:skip_compass_compile, false)
 
-      if !watched_dirs.nil?
+
+      if !watched_dirs.nil? && skip_compass_compile == false
         compass_bin_local     = find_compass_bin_path
         compass_bin           = fetch(:compass_bin, compass_bin_local)
         compass_env           = fetch(:compass_env, "production")
