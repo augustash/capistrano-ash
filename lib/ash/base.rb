@@ -470,7 +470,7 @@ configuration.load do
             logger.debug "trying to upload stylesheets from ./#{dir}/#{stylesheets_dir_name}/ -> #{latest_release}/#{dir}/#{stylesheets_dir_name}/"
 
             servers.each do |web_server|
-              upload_command = "scp -r ./#{dir}/#{stylesheets_dir_name}/*.css #{user}@#{web_server}:#{latest_release}/#{dir}/#{stylesheets_dir_name}/"
+              upload_command = "scp -r -P {#port} ./#{dir}/#{stylesheets_dir_name}/*.css #{user}@#{web_server}:#{latest_release}/#{dir}/#{stylesheets_dir_name}/"
 
               logger.info "running SCP command:"
               logger.debug upload_command
