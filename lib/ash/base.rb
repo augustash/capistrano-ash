@@ -107,8 +107,8 @@ configuration.load do
     task :setup, :except => { :no_release => true } do
       dirs = [deploy_to, releases_path, shared_path]
       dirs += shared_children.map { |d| File.join(shared_path, d.split('/').last) }
-      run "#{try_sudo} mkdir -p #{dirs.join(' ')}"
-      run "#{try_sudo} chmod 755 #{dirs.join(' ')}" if fetch(:group_writable, true)
+      try_sudo "mkdir -p #{dirs.join(' ')}"
+      try_sudo "chmod 755 #{dirs.join(' ')}" if fetch(:group_writable, true)
     end
 
     desc "Setup shared application directories and permissions after initial setup"
@@ -118,7 +118,7 @@ configuration.load do
 
     desc "Setup backup directory for database and web files"
     task :setup_backup, :except => { :no_release => true } do
-      run "#{try_sudo} mkdir -p #{backups_path} #{tmp_backups_path} && #{try_sudo} chmod 755 #{backups_path}"
+      try_sudo "mkdir -p #{backups_path} #{tmp_backups_path} && chmod 755 #{backups_path} && chown -R #{user}:#{user} #{backups}"
     end
 
     desc <<-DESC
