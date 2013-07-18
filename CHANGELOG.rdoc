@@ -1,3 +1,12 @@
+== 1.3.2
+* FIXED: Issue #28 - use try_sudo where appropriate
+* FEATURE: Issue #33 - Enable git submodules by default if using git
+* FIXED: Issue #34 - scp fails because of missing port option
+* FIXED: Issue #37 - Rescue from errors during backup:cleanup
+* MERGED PULL REQUEST: Issue #38 - improve set_perms_dirs and set_perms_files performance
+* FIXED: Issue #39 - zend:symlink is run multiple times
+* FEATURE: Issue #40 - check remote servers to see if drush is installed and available to the user
+
 == 1.3.1
 * Added additional variable (:skip_compass_compile) to skip the compilation and just upload stylesheets (useful for our upcoming Wraith theme)
 * Namespaced the commands within `compass:defualt` to avoid any future conflicts
