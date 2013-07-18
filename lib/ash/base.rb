@@ -43,7 +43,8 @@ configuration.load do
   # Source Control
   set :group_writable,    false
   set :use_sudo,          false
-  set :scm,               :subversion
+  set :scm,               :git
+  set :git_enable_submodules, 1 if fetch(:scm, :git)
   set :scm_verbose,       true
   set :scm_username,      proc{text_prompt("Subversion username: ")}
   set :scm_password,      proc{Capistrano::CLI.password_prompt("Subversion password for '#{scm_username}': ")}
@@ -107,8 +108,8 @@ configuration.load do
     task :setup, :except => { :no_release => true } do
       dirs = [deploy_to, releases_path, shared_path]
       dirs += shared_children.map { |d| File.join(shared_path, d.split('/').last) }
-      run "#{try_sudo} mkdir -p #{dirs.join(' ')}"
-      run "#{try_sudo} chmod 755 #{dirs.join(' ')}" if fetch(:group_writable, true)
+      try_sudo "mkdir -p #{dirs.join(' ')}"
+      try_sudo "chmod 755 #{dirs.join(' ')}" if fetch(:group_writable, true)
     end
 
     desc "Setup shared application directories and permissions after initial setup"
@@ -118,7 +119,7 @@ configuration.load do
 
     desc "Setup backup directory for database and web files"
     task :setup_backup, :except => { :no_release => true } do
-      run "#{try_sudo} mkdir -p #{backups_path} #{tmp_backups_path} && #{try_sudo} chmod 755 #{backups_path}"
+      try_sudo "mkdir -p #{backups_path} #{tmp_backups_path} && chmod 755 #{backups_path} && chown -R #{user}:#{user} #{backups}"
     end
 
     desc <<-DESC
@@ -416,16 +417,20 @@ configuration.load do
       else
         logger.info "keeping #{count} of #{backups.length} backups"
 
-        archives = (backups - backups.last(count)).map { |backup|
-          File.join(backups_path, backup) }.join(" ")
+        begin
+          archives = (backups - backups.last(count)).map { |backup|
+            File.join(backups_path, backup) }.join(" ")
 
-        # fix permissions on the the files and directories before removing them
-        archives.split(" ").each do |backup|
-          set_perms_dirs("#{backup}", 755)
-          set_perms_files("#{backup}", 644)
+          # fix permissions on the the files and directories before removing them
+          archives.split(" ").each do |backup|
+            set_perms_dirs("#{backup}", 755)
+            set_perms_files("#{backup}", 644)
+          end
+
+          try_sudo "rm -rf #{archives}"
+        rescue Exception => e
+          logger.important e.message
         end
-
-        try_sudo "rm -rf #{archives}"
       end
     end
   end
@@ -458,7 +463,7 @@ configuration.load do
           logger.debug "trying to upload stylesheets from ./#{watched_dirs}/#{stylesheets_dir_name} -> #{latest_release}/#{watched_dirs}/#{stylesheets_dir_name}"
 
           servers.each do |web_server|
-            upload_command = "scp -r ./#{watched_dirs}/#{stylesheets_dir_name}/*.css #{user}@#{web_server}:#{latest_release}/#{watched_dirs}/#{stylesheets_dir_name}/"
+            upload_command = "scp -r -P #{port} ./#{watched_dirs}/#{stylesheets_dir_name}/*.css #{user}@#{web_server}:#{latest_release}/#{watched_dirs}/#{stylesheets_dir_name}/"
 
             logger.info "running SCP command:"
             logger.debug upload_command
@@ -470,7 +475,7 @@ configuration.load do
             logger.debug "trying to upload stylesheets from ./#{dir}/#{stylesheets_dir_name}/ -> #{latest_release}/#{dir}/#{stylesheets_dir_name}/"
 
             servers.each do |web_server|
-              upload_command = "scp -r ./#{dir}/#{stylesheets_dir_name}/*.css #{user}@#{web_server}:#{latest_release}/#{dir}/#{stylesheets_dir_name}/"
+              upload_command = "scp -r -P #{port} ./#{dir}/#{stylesheets_dir_name}/*.css #{user}@#{web_server}:#{latest_release}/#{dir}/#{stylesheets_dir_name}/"
 
               logger.info "running SCP command:"
               logger.debug upload_command

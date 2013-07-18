@@ -9,6 +9,14 @@ configuration = Capistrano::Configuration.respond_to?(:instance) ?
 configuration.load do
 
   # --------------------------------------------
+  # Deployment dependencies
+  #
+  #     $ cap <stage> deploy:check
+  #
+  # --------------------------------------------
+  depend :remote, :command, 'drush'
+
+  # --------------------------------------------
   # Setting defaults
   # --------------------------------------------
   proc{_cset( :multisites, {"#{application}" => "#{application}"} )}
@@ -55,17 +63,17 @@ configuration.load do
     desc "Setup shared application directories and permissions after initial setup"
     task :setup_shared do
       # remove Capistrano specific directories
-      run "rm -Rf #{shared_path}/log"
-      run "rm -Rf #{shared_path}/pids"
-      run "rm -Rf #{shared_path}/system"
+      try_sudo "rm -Rf #{shared_path}/log"
+      try_sudo "rm -Rf #{shared_path}/pids"
+      try_sudo "rm -Rf #{shared_path}/system"
 
       # create shared directories
       multisites.each_pair do |folder, url|
-        run "mkdir -p #{shared_path}/#{url}/files"
+        try_sudo "mkdir -p #{shared_path}/#{url}/files"
       end
 
       # set correct permissions
-      run "chmod -R 777 #{shared_path}/*"
+      try_sudo "chmod -R 777 #{shared_path}/*"
     end
 
     desc "[internal] Touches up the released code. This is called by update_code after the basic deploy finishes."
@@ -73,9 +81,9 @@ configuration.load do
       # remove shared directories
       multisites.each_pair do |folder, url|
         if folder != url
-          run "mv #{latest_release}/sites/#{folder} #{latest_release}/sites/#{url}"
+          try_sudo "mv #{latest_release}/sites/#{folder} #{latest_release}/sites/#{url}"
         end
-        run "rm -Rf #{latest_release}/sites/#{url}/files"
+        try_sudo "rm -Rf #{latest_release}/sites/#{url}/files"
       end
     end
 
@@ -144,7 +152,7 @@ configuration.load do
         # symlinks the appropriate environment's settings.php file
         symlink_config_file
 
-        run "ln -nfs #{shared_path}/#{url}/files #{latest_release}/sites/#{url}/files"
+        try_sudo "ln -nfs #{shared_path}/#{url}/files #{latest_release}/sites/#{url}/files"
         run "#{drush_bin} -l #{url} -r #{current_path} vset --yes file_directory_path sites/#{url}/files"
       end
     end
@@ -188,7 +196,7 @@ configuration.load do
     desc "Protect system files"
     task :protect, :roles => :web, :except => { :no_release => true } do
       multisites.each_pair do |folder, url|
-        run "chmod 644 #{latest_release}/sites/#{url}/settings.php*"
+        try_sudo "chmod 644 #{latest_release}/sites/#{url}/settings.php*"
       end
     end
 
@@ -220,7 +228,7 @@ configuration.load do
       DESC
       task :setup_ubercart_shared, :roles => :web, :except => { :no_release => true } do
         multisites.each_pair do |folder, url|
-          run "mkdir -p #{shared_path}/#{url}/#{uc_root}"
+          try_sudo "mkdir -p #{shared_path}/#{url}/#{uc_root}"
         end
       end
 
@@ -239,13 +247,13 @@ configuration.load do
       task :secure_downloadable_files, :except => { :no_release => true } do
         # loop through the multisites and move files
         multisites.each_pair do |folder, url|
-          run "mkdir -p #{shared_path}/#{url}/#{uc_root}/#{uc_downloadable_products_root}"
+          try_sudo "mkdir -p #{shared_path}/#{url}/#{uc_root}/#{uc_downloadable_products_root}"
 
           ubercart_dir = "#{latest_release}/sites/#{url}/files/#{uc_root}/#{uc_downloadable_products_root}"
 
           case true
             when remote_dir_exists?("#{ubercart_dir}")
-              run "rsync -rltDvzog #{ubercart_dir} #{shared_path}/#{url}/#{uc_root}/#{uc_downloadable_products_root}"
+              try_sudo "rsync -rltDvzog #{ubercart_dir} #{shared_path}/#{url}/#{uc_root}/#{uc_downloadable_products_root}"
             else
               logger.important "Failed to rsync the ubercart downloadable products in #{ubercart_dir} because the directory doesn't exist"
           end
@@ -273,7 +281,7 @@ configuration.load do
       task :secure_encryption_key, :roles => :web, :except => { :no_release => true } do
         # loop through the multisites and move keys
         multisites.each_pair do |folder, url|
-          run "mkdir -p #{shared_path}/#{url}/#{uc_root}/#{uc_encryption_keys_root}"
+          try_sudo "mkdir -p #{shared_path}/#{url}/#{uc_root}/#{uc_encryption_keys_root}"
 
           # update the ubercart's database tracking of where the
           # root file path is for encryption keys. This should

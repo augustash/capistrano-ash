@@ -13,12 +13,11 @@ configuration.load do
   # --------------------------------------------
   after "deploy:setup", "deploy:setup_shared"
   after "deploy:finalize_update", "ash:fixperms"
-  # after "deploy:create_symlink", "zend:symlink"
 
   # workaround for issues with capistrano v2.13.3 and
   # before/after callbacks not firing for 'deploy:symlink'
   # or 'deploy:create_symlink'
-  after "deploy", "zend:symlink"
+  after "deploy:create_symlink", "zend:symlink"
   after "zend:symlink", "compass"
   after "deploy", "deploy:cleanup"
 
