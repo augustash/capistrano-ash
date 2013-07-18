@@ -9,6 +9,14 @@ configuration = Capistrano::Configuration.respond_to?(:instance) ?
 configuration.load do
 
   # --------------------------------------------
+  # Deployment dependencies
+  #
+  #     $ cap <stage> deploy:check
+  #
+  # --------------------------------------------
+  depend :remote, :command, 'drush'
+
+  # --------------------------------------------
   # Setting defaults
   # --------------------------------------------
   proc{_cset( :multisites, {"#{application}" => "#{application}"} )}
