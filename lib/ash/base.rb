@@ -416,16 +416,20 @@ configuration.load do
       else
         logger.info "keeping #{count} of #{backups.length} backups"
 
-        archives = (backups - backups.last(count)).map { |backup|
-          File.join(backups_path, backup) }.join(" ")
+        begin
+          archives = (backups - backups.last(count)).map { |backup|
+            File.join(backups_path, backup) }.join(" ")
 
-        # fix permissions on the the files and directories before removing them
-        archives.split(" ").each do |backup|
-          set_perms_dirs("#{backup}", 755)
-          set_perms_files("#{backup}", 644)
+          # fix permissions on the the files and directories before removing them
+          archives.split(" ").each do |backup|
+            set_perms_dirs("#{backup}", 755)
+            set_perms_files("#{backup}", 644)
+          end
+
+          try_sudo "rm -rf #{archives}"
+        rescue Exception => e
+          logger.important e.message
         end
-
-        try_sudo "rm -rf #{archives}"
       end
     end
   end
