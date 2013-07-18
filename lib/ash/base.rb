@@ -43,7 +43,7 @@ configuration.load do
   # Source Control
   set :group_writable,    false
   set :use_sudo,          false
-  set :scm,               :subversion
+  set :scm,               :git
   set :scm_verbose,       true
   set :scm_username,      proc{text_prompt("Subversion username: ")}
   set :scm_password,      proc{Capistrano::CLI.password_prompt("Subversion password for '#{scm_username}': ")}
