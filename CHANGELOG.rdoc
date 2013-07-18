@@ -1,3 +1,6 @@
+== 1.3.3
+* FIXED: Issue #42 - chown backups path was failing miserably in the deploy:setup_backup task
+
 == 1.3.2
 * FIXED: Issue #28 - use try_sudo where appropriate
 * FEATURE: Issue #33 - Enable git submodules by default if using git
