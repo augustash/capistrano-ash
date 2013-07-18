@@ -44,6 +44,7 @@ configuration.load do
   set :group_writable,    false
   set :use_sudo,          false
   set :scm,               :git
+  set :git_enable_submodules, 1 if fetch(:scm, :git)
   set :scm_verbose,       true
   set :scm_username,      proc{text_prompt("Subversion username: ")}
   set :scm_password,      proc{Capistrano::CLI.password_prompt("Subversion password for '#{scm_username}': ")}
