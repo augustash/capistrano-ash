@@ -119,7 +119,7 @@ configuration.load do
 
     desc "Setup backup directory for database and web files"
     task :setup_backup, :except => { :no_release => true } do
-      try_sudo "mkdir -p #{backups_path} #{tmp_backups_path} && chmod 755 #{backups_path} && chown -R #{user}:#{user} #{backups}"
+      try_sudo "mkdir -p #{backups_path} #{tmp_backups_path} && chmod 755 #{backups_path}"
     end
 
     desc <<-DESC
