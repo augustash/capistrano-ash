@@ -55,8 +55,8 @@ configuration.load do
     desc "[internal] Touches up the released code. This is called by update_code after the basic deploy finishes."
     task :finalize_update, :roles => :web, :except => { :no_release => true } do
       # synchronize media directory with shared data
-      sudo "rsync -rltDvzog #{latest_release}/media/ #{shared_path}/media/"
-      sudo "chmod -R 777 #{shared_path}/media/"
+      try_sudo "rsync -rltDvzog #{latest_release}/media/ #{shared_path}/media/"
+      try_sudo "chmod -R 777 #{shared_path}/media/"
 
       # remove directories that will be shared
       run "rm -Rf #{latest_release}/includes"
@@ -108,7 +108,7 @@ configuration.load do
 
     desc "Purge Magento cache directory"
     task :purge_cache, :roles => :web, :except => { :no_release => true } do
-      sudo "rm -Rf #{shared_path}/var/cache/*"
+      try_sudo "rm -Rf #{shared_path}/var/cache/*"
     end
 
     desc "Watch Magento system log"
@@ -132,7 +132,7 @@ configuration.load do
     desc "Clear the Magento Cache"
     task :cc, :roles => [:web, :app], :except => { :no_release => true } do
       magento.purge_cache
-      sudo "rm -rf #{shared_path}/var/full_page_cache/*"
+      try_sudo "rm -rf #{shared_path}/var/full_page_cache/*"
     end
 
     desc "Enable display errors"
