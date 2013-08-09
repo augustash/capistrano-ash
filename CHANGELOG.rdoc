@@ -1,3 +1,9 @@
+== 1.3.4
+* CLOSED: Issue #41 - capistrano-ash is now under a MIT License
+* FIXED: Issue #43 - define port number if it hasn't already been set
+* FIXED: Issue #44 - fixes issue with set_perms_dirs if the path is not a directory
+* MERGED PULL REQUEST: Issue #45 - Replace 'sudo' with 'try_sudo' so that 'set :use_sudo, false' works
+
 == 1.3.3
 * FIXED: Issue #42 - chown backups path was failing miserably in the deploy:setup_backup task
 

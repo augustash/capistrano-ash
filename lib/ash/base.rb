@@ -423,7 +423,7 @@ configuration.load do
 
           # fix permissions on the the files and directories before removing them
           archives.split(" ").each do |backup|
-            set_perms_dirs("#{backup}", 755)
+            set_perms_dirs("#{backup}", 755) if File.directory?(backup)
             set_perms_files("#{backup}", 644)
           end
 
@@ -453,6 +453,7 @@ configuration.load do
     task :upload_stylesheets, :roles => :web, :except => { :no_release => true } do
       watched_dirs          = fetch(:compass_watched_dirs, nil)
       stylesheets_dir_name  = fetch(:stylesheets_dir_name, 'stylesheets')
+      port                  = fetch(:port, 22)
 
       # finds all the web servers that we should upload stylesheets to
       servers = find_servers :roles => :web
