@@ -5,18 +5,20 @@
 
 Gem::Specification.new do |s|
   s.name = "capistrano-ash"
-  s.version = "1.3.3"
+  s.version = "1.3.4"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["August Ash"]
-  s.date = "2013-07-18"
+  s.date = "2013-08-09"
   s.description = "August Ash recipes for Capistrano"
   s.email = "code@augustash.com"
   s.extra_rdoc_files = [
+    "LICENSE.txt",
     "README.textile"
   ]
   s.files = [
     "CHANGELOG.rdoc",
+    "LICENSE.txt",
     "README.textile",
     "Rakefile",
     "VERSION",
