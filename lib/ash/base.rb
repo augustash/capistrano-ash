@@ -423,7 +423,7 @@ configuration.load do
 
           # fix permissions on the the files and directories before removing them
           archives.split(" ").each do |backup|
-            set_perms_dirs("#{backup}", 755)
+            set_perms_dirs("#{backup}", 755) if File.directory?(backup)
             set_perms_files("#{backup}", 644)
           end
 
