@@ -57,7 +57,7 @@ configuration.load do
     desc "Setup local files necessary for deployment"
     task :setup_local do
       # attempt to create files needed for proper deployment
-      system("cp .htaccess htaccess.dist")
+      system("cp .htaccess htaccess.dist") unless local_file_exists?("htaccess.dist")
     end
 
     desc "Setup shared application directories and permissions after initial setup"

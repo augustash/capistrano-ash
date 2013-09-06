@@ -30,9 +30,10 @@ configuration.load do
     desc "Setup local files necessary for deployment"
     task :setup_local do
       # attempt to create files needed for proper deployment
-      system("cp .htaccess htaccess.dist")
-      system("cp app/etc/local.xml app/etc/local.xml.staging")
-      system("cp app/etc/local.xml app/etc/local.xml.production")
+      system("cp .htaccess htaccess.dist") unless local_file_exists?("htaccess.dist")
+      %w(staging production).each do |env|
+        system("cp app/etc/local.xml app/etc/local.xml.#{env}") unless local_file_exists?("app/etc/local.xml.#{env}")
+      end
     end
 
     desc "Setup shared application directories and permissions after initial setup"
