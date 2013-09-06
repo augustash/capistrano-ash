@@ -392,8 +392,13 @@ configuration.load do
         dump_options  = fetch(:dump_options, "--single-transaction --create-options --quick")
 
         puts "Backing up the database now and putting dump file in the previous release directory"
+
+        # create the temporary copy for the release directory
+        # which we'll tarball in the backup:web task
+        run "mkdir -p #{tmp_backups_path}/#{release_name}"
+
         # define the filename (include the current_path so the dump file will be within the directory)
-        filename = "#{current_path}/#{dbname}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
+        filename = "#{tmp_backups_path}/#{release_name}/#{dbname}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
         # dump the database for the proper environment
         run "#{mysqldump} #{dump_options} -u #{dbuser} -p #{dbname} | gzip -c --best > #{filename}" do |ch, stream, out|
             ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
