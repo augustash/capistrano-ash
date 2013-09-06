@@ -31,7 +31,8 @@ configuration.load do
     task :setup_local do
       # attempt to create files needed for proper deployment
       system("cp .htaccess htaccess.dist") unless local_file_exists?("htaccess.dist")
-      %w(staging production).each do |env|
+      stages = fetch(:stages, %w(staging production))
+      stages.each do |env|
         system("cp app/etc/local.xml app/etc/local.xml.#{env}") unless local_file_exists?("app/etc/local.xml.#{env}")
       end
     end
