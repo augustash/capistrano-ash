@@ -8,11 +8,18 @@ configuration = Capistrano::Configuration.respond_to?(:instance) ?
   Capistrano.configuration(:must_exist)
 
 configuration.load do
+
+  # --------------------------------------------
+  # Magento Variables
+  # --------------------------------------------
+  set :enable_modules, []
+  set :disable_modules, %w(Ash_Bar)
+
   # --------------------------------------------
   # Task chains
   # --------------------------------------------
   after "deploy:setup", "deploy:setup_local"
-#  after "deploy:setup_shared", "pma:install"
+  #  after "deploy:setup_shared", "pma:install"
   after "deploy:finalize_update", "magento:activate_config"
   # after "deploy:create_symlink", "magento:symlink"
 
@@ -20,6 +27,8 @@ configuration.load do
   # before/after callbacks not firing for 'deploy:symlink'
   # or 'deploy:create_symlink'
   after "deploy", "magento:symlink"
+  after "magento:symlink", "magento:enable_mods"
+  after "magento:enable_mods", "magento:disable_mods"
   after "magento:symlink", "magento:purge_cache"
   before "magento:purge_cache", "compass"
 
@@ -142,6 +151,30 @@ configuration.load do
       run "perl -pi -e 's/#ini_set/ini_set/g' #{latest_release}/index.php"
     end
 
+    desc "Enable Modules"
+    task :enable_mods, :roles => :web, :except => { :no_release => true } do
+      modules = fetch(:enable_modules, [])
+      # enable specific modules
+      modules.each do |name|
+        mod_name = name.include?('.xml') ? "#{name}" : "#{name}.xml"
+        mod_path = "#{latest_release}/app/etc/modules/#{mod_path}"
+        # enable the module
+        run "perl -pi -e 's/false/true/g' #{mod_path}" if remote_file_exists?("#{mod_path}")
+      end
+    end
+
+    desc "Disable Modules"
+    task :disable_mods, :roles => :web, :except => { :no_release => true } do
+      modules = fetch(:disable_modules, [])
+
+      # enable specific modules
+      modules.each do |name|
+        mod_name = name.include?('.xml') ? "#{name}" : "#{name}.xml"
+        mod_path = "#{latest_release}/app/etc/modules/#{mod_path}"
+        # disable the module
+        run "perl -pi -e 's/true/false/g' #{mod_path}" if remote_file_exists?("#{mod_path}")
+      end
+    end
   end
 
   # --------------------------------------------
