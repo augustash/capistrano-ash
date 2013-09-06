@@ -386,7 +386,7 @@ configuration.load do
         run "cd #{tmp_backups_path} && tar -cvpf - ./#{release_name}/ | gzip -c --best > #{backups_path}/#{archive_name}"
 
         # remove the the temporary copy
-        logger.debug "Removing the tempory copy"
+        logger.debug "Removing the temporary copy"
         run "rm -rf #{tmp_backups_path}/#{release_name}"
       else
         logger.important "no previous release to backup; backup of files skipped"
