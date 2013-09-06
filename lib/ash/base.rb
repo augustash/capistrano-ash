@@ -348,7 +348,7 @@ configuration.load do
       You can specify which files or directories to exclude from being \
       backed up (i.e., log files, sessions, cache) by setting the \
       :backup_exclude variable
-          set(:backup_exclude) { [ "var/", "tmp/", logs/debug.log ] }
+          set(:backup_exclude) { [ "var/", "tmp/", "logs/debug.log" ] }
     DESC
     task :web, :roles => :web do
       if previous_release
