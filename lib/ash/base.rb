@@ -377,17 +377,22 @@ configuration.load do
         # --------------------------
         # SET/RESET PERMISSIONS
         # --------------------------
-        set_perms_dirs("#{tmp_backups_path}/#{release_name}", 755)
-        set_perms_files("#{tmp_backups_path}/#{release_name}", 644)
+        begin
+          set_perms_dirs("#{tmp_backups_path}/#{release_name}", 755)
+          set_perms_files("#{tmp_backups_path}/#{release_name}", 644)
 
-        # create the tarball of the previous release
-        set :archive_name, "release_B4_#{release_name}.tar.gz"
-        logger.debug "Creating a Tarball of the previous release in #{backups_path}/#{archive_name}"
-        run "cd #{tmp_backups_path} && tar -cvpf - ./#{release_name}/ | gzip -c --best > #{backups_path}/#{archive_name}"
+          # create the tarball of the previous release
+          set :archive_name, "release_B4_#{release_name}.tar.gz"
+          logger.debug "Creating a Tarball of the previous release in #{backups_path}/#{archive_name}"
+          run "cd #{tmp_backups_path} && tar -cvpf - ./#{release_name}/ | gzip -c --best > #{backups_path}/#{archive_name}"
 
-        # remove the the temporary copy
-        logger.debug "Removing the temporary copy"
-        run "rm -rf #{tmp_backups_path}/#{release_name}"
+          # remove the the temporary copy
+          logger.debug "Removing the temporary copy"
+          run "rm -rf #{tmp_backups_path}/#{release_name}"
+        rescue Exception => e
+          logger.debug e.message
+          logger.info "Error setting permissions on backed up files but continuing on..."
+        end
       else
         logger.important "no previous release to backup; backup of files skipped"
       end
