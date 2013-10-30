@@ -142,6 +142,7 @@ configuration.load do
 
     desc "Clear the Magento Cache"
     task :cc, :roles => [:web, :app], :except => { :no_release => true } do
+      run "#{sudo} chown -R #{user}:#{user} #{shared_path}/var/*"
       magento.purge_cache
       run "#{sudo} rm -rf #{shared_path}/var/full_page_cache/*"
     end
