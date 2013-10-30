@@ -282,11 +282,11 @@ EOF
       desc "[internal] - #{cmd.upcase} nginx and php-fpm"
       task cmd.to_sym, :roles => :web do
 
-        fetch (:nginx_init_command, "/etc/init.d/nginx")
-        fetch (:phpfpm_init_command, "/etc/init.d/php-fpm")
+        nginx_cmd   = fetch(:nginx_init_command, "/etc/init.d/nginx")
+        phpfpm_cmd  = fetch(:phpfpm_init_command, "/etc/init.d/php-fpm")
 
-        run "#{sudo} #{nginx_init_command} #{cmd}"
-        run "#{sudo} #{phpfpm_init_command} #{cmd}"
+        run "#{sudo} #{nginx_cmd} #{cmd}"
+        run "#{sudo} #{phpfpm_cmd} #{cmd}"
       end
     end
   end
