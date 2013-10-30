@@ -62,7 +62,7 @@ configuration.load do
   set :copy_strategy,     :checkout
   set :copy_compression,  :bz2
   set :copy_exclude,      [".svn", ".git*", ".DS_Store", "*.sample", "LICENSE*", "Capfile",
-    "RELEASE*", "*.rb", "*.sql", "nbproject", "_template"]
+    "RELEASE*", "config/deploy", "*.rb", "*.sql", "nbproject", "_template"]
 
   # phpMyAdmin version
   set :pma_version,       "3.4.5"
