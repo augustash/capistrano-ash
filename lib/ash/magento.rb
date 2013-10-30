@@ -166,7 +166,7 @@ configuration.load do
       # enable specific modules
       modules.each do |name|
         mod_name = name.include?('.xml') ? "#{name}" : "#{name}.xml"
-        mod_path = "#{latest_release}/app/etc/modules/#{mod_path}"
+        mod_path = "#{latest_release}/app/etc/modules/#{mod_name}"
         # enable the module
         run "perl -pi -e 's/false/true/g' #{mod_path}" if remote_file_exists?("#{mod_path}")
       end
@@ -179,7 +179,7 @@ configuration.load do
       # enable specific modules
       modules.each do |name|
         mod_name = name.include?('.xml') ? "#{name}" : "#{name}.xml"
-        mod_path = "#{latest_release}/app/etc/modules/#{mod_path}"
+        mod_path = "#{latest_release}/app/etc/modules/#{mod_name}"
         # disable the module
         run "perl -pi -e 's/true/false/g' #{mod_path}" if remote_file_exists?("#{mod_path}")
       end
