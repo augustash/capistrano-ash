@@ -161,13 +161,13 @@ configuration.load do
           # adding a chown -R method to fix permissions on the directory
           # this should help with issues related to permission denied
           # as in issues #28 and #30
-          try_sudo "chown -R #{user}:#{user} #{dir}"
+          run "#{sudo} chown -R #{user}:#{user} #{dir}"
 
           set_perms_dirs(dir)
           set_perms_files(dir)
         end
 
-        try_sudo "rm -rf #{directories}"
+        run "rm -rf #{directories}"
       end
     end
   end
