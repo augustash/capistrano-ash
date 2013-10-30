@@ -445,7 +445,7 @@ configuration.load do
             set_perms_files("#{backup}", 644) if remote_dir_exists?(backup)
           end
 
-          try_sudo "rm -rf #{archives}"
+          run "rm -rf #{archives}"
         rescue Exception => e
           logger.important e.message
         end
