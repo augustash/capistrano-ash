@@ -15,6 +15,7 @@ configuration.load do
   #
   # --------------------------------------------
   depend :remote, :command, 'drush'
+  depend :remote, :command, 'rsync'
 
   # --------------------------------------------
   # Setting defaults

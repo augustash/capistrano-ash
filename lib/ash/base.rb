@@ -14,14 +14,6 @@ configuration = Capistrano::Configuration.respond_to?(:instance) ?
 
 configuration.load do
 
-  # --------------------------------------------
-  # Deployment dependencies
-  #
-  #     $ cap <stage> deploy:check
-  #
-  # --------------------------------------------
-  depend :remote, :command, 'rsync'
-
   # Set default stages
   set :stages, %w(staging production)
   set :default_stage, "staging"
