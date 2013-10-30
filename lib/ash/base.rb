@@ -260,6 +260,24 @@ EOF
   end
 
   # --------------------------------------------
+  # NGINX tasks
+  # --------------------------------------------
+  namespace :nginx do
+    %w(start stop restart status).each do |cmd|
+      desc "[internal] - #{cmd.upcase} nginx and php-fpm"
+      task cmd.to_sym, :roles => :web do
+
+        fetch (:nginx_init_command, "/etc/init.d/nginx")
+        fetch (:phpfpm_init_command, "/etc/init.d/php-fpm")
+
+        run "#{sudo} #{nginx_init_command} #{cmd}"
+        run "#{sudo} #{phpfpm_init_command} #{cmd}"
+      end
+    end
+  end
+
+
+  # --------------------------------------------
   # Remote/Local database migration tasks
   # --------------------------------------------
   namespace :db do
