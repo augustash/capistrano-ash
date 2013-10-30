@@ -146,29 +146,44 @@ configuration.load do
       will use sudo to clean up the old releases, but if sudo is not available \
       for your environment, set the :use_sudo variable to false instead. \
 
-      Overridden to set/reset file and directory permissions
+      OVERRIDES:
+      + set/reset file and directory permissions
+      + remove old releases per host instead of assuming the releases are \
+        the same for every host
+
+      see http://blog.perplexedlabs.com/2010/09/08/improved-deploycleanup-for-capistrano/
     DESC
     task :cleanup, :except => { :no_release => true } do
       count = fetch(:keep_releases, 5).to_i
-      local_releases = capture("ls -xt #{releases_path}").split.reverse
-      if count >= local_releases.length
-        logger.important "no old releases to clean up"
-      else
-        logger.info "keeping #{count} of #{local_releases.length} deployed releases"
-        directories = (local_releases - local_releases.last(count)).map { |release|
-          File.join(releases_path, release) }.join(" ")
+      cmd = "ls -xt #{releases_path}"
+      run cmd do |channel, stream, data|
+        local_releases = data.split.reverse
+        if count >= local_releases.length
+          logger.important "no old releases to clean up on #{channel[:server]}"
+        else
+          logger.info "keeping #{count} of #{local_releases.length} deployed releases on #{channel[:server]}"
 
-        directories.split(" ").each do |dir|
-          # adding a chown -R method to fix permissions on the directory
-          # this should help with issues related to permission denied
-          # as in issues #28 and #30
-          run "#{sudo} chown -R #{user}:#{user} #{dir}"
+          directories = (local_releases - local_releases.last(count)).map { |release|
+            File.join(releases_path, release)
+          }.join(" ")
 
-          set_perms_dirs(dir)
-          set_perms_files(dir)
+          directories.split(" ").each do |dir|
+            begin
+              # adding a chown -R method to fix permissions on the directory
+              # this should help with issues related to permission denied
+              # as in issues #28 and #30
+              run "#{sudo} chown -R #{user}:#{user} #{dir}" if remote_dir_exists?(dir)
+
+              set_perms_dirs(dir)
+              set_perms_files(dir)
+            rescue Exception => e
+              logger.important e.message
+              logger.info "Moving on to the next directory..."
+            end
+          end
+
+          run "#{sudo} rm -rf #{directories}", :hosts => [channel[:server]]
         end
-
-        run "rm -rf #{directories}"
       end
     end
   end
