@@ -57,7 +57,7 @@ configuration.load do
     desc "Setup local files necessary for deployment"
     task :setup_local do
       # attempt to create files needed for proper deployment
-      system("cp .htaccess htaccess.dist")
+      system("cp .htaccess htaccess.dist") unless local_file_exists?("htaccess.dist")
     end
 
     desc "Setup shared application directories and permissions after initial setup"
@@ -130,9 +130,14 @@ configuration.load do
     task :db, :roles => :db do
       if previous_release
         puts "Backing up the database now and putting dump file in the previous release directory"
+
+        # create the temporary copy for the release directory
+        # which we'll tarball in the backup:web task
+        run "mkdir -p #{tmp_backups_path}/#{release_name}"
+
         multisites.each_pair do |folder, url|
           # define the filename (include the current_path so the dump file will be within the directory)
-          filename = "#{current_path}/#{folder}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
+          filename = "#{tmp_backups_path}/#{release_name}/#{folder}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
           # dump the database for the proper environment
           run "#{drush_bin} -l #{url} -r #{current_path} sql-dump | gzip -c --best > #{filename}"
         end

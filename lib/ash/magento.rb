@@ -8,11 +8,18 @@ configuration = Capistrano::Configuration.respond_to?(:instance) ?
   Capistrano.configuration(:must_exist)
 
 configuration.load do
+
+  # --------------------------------------------
+  # Magento Variables
+  # --------------------------------------------
+  set :enable_modules, []
+  set :disable_modules, %w(Ash_Bar)
+
   # --------------------------------------------
   # Task chains
   # --------------------------------------------
   after "deploy:setup", "deploy:setup_local"
-#  after "deploy:setup_shared", "pma:install"
+  #  after "deploy:setup_shared", "pma:install"
   after "deploy:finalize_update", "magento:activate_config"
   # after "deploy:create_symlink", "magento:symlink"
 
@@ -20,6 +27,8 @@ configuration.load do
   # before/after callbacks not firing for 'deploy:symlink'
   # or 'deploy:create_symlink'
   after "deploy", "magento:symlink"
+  after "magento:symlink", "magento:enable_mods"
+  after "magento:enable_mods", "magento:disable_mods"
   after "magento:symlink", "magento:purge_cache"
   before "magento:purge_cache", "compass"
 
@@ -30,9 +39,11 @@ configuration.load do
     desc "Setup local files necessary for deployment"
     task :setup_local do
       # attempt to create files needed for proper deployment
-      system("cp .htaccess htaccess.dist")
-      system("cp app/etc/local.xml app/etc/local.xml.staging")
-      system("cp app/etc/local.xml app/etc/local.xml.production")
+      system("cp .htaccess htaccess.dist") unless local_file_exists?("htaccess.dist")
+      stages = fetch(:stages, %w(staging production))
+      stages.each do |env|
+        system("cp app/etc/local.xml app/etc/local.xml.#{env}") unless local_file_exists?("app/etc/local.xml.#{env}")
+      end
     end
 
     desc "Setup shared application directories and permissions after initial setup"
@@ -55,8 +66,8 @@ configuration.load do
     desc "[internal] Touches up the released code. This is called by update_code after the basic deploy finishes."
     task :finalize_update, :roles => :web, :except => { :no_release => true } do
       # synchronize media directory with shared data
-      try_sudo "rsync -rltDvzog #{latest_release}/media/ #{shared_path}/media/"
-      try_sudo "chmod -R 777 #{shared_path}/media/"
+      run "rsync -rltDvzog #{latest_release}/media/ #{shared_path}/media/"
+      run "#{sudo} chmod -R 777 #{shared_path}/media/"
 
       # remove directories that will be shared
       run "rm -Rf #{latest_release}/includes"
@@ -108,7 +119,7 @@ configuration.load do
 
     desc "Purge Magento cache directory"
     task :purge_cache, :roles => :web, :except => { :no_release => true } do
-      try_sudo "rm -Rf #{shared_path}/var/cache/*"
+      run "#{sudo} rm -Rf #{shared_path}/var/cache/*"
     end
 
     desc "Watch Magento system log"
@@ -131,8 +142,9 @@ configuration.load do
 
     desc "Clear the Magento Cache"
     task :cc, :roles => [:web, :app], :except => { :no_release => true } do
+      run "#{sudo} chown -R #{user}:#{user} #{shared_path}/var/*"
       magento.purge_cache
-      try_sudo "rm -rf #{shared_path}/var/full_page_cache/*"
+      run "#{sudo} rm -rf #{shared_path}/var/full_page_cache/*"
     end
 
     desc "Enable display errors"
@@ -140,6 +152,30 @@ configuration.load do
       run "perl -pi -e 's/#ini_set/ini_set/g' #{latest_release}/index.php"
     end
 
+    desc "Enable Modules"
+    task :enable_mods, :roles => :web, :except => { :no_release => true } do
+      modules = fetch(:enable_modules, [])
+      # enable specific modules
+      modules.each do |name|
+        mod_name = name.include?('.xml') ? "#{name}" : "#{name}.xml"
+        mod_path = "#{latest_release}/app/etc/modules/#{mod_path}"
+        # enable the module
+        run "perl -pi -e 's/false/true/g' #{mod_path}" if remote_file_exists?("#{mod_path}")
+      end
+    end
+
+    desc "Disable Modules"
+    task :disable_mods, :roles => :web, :except => { :no_release => true } do
+      modules = fetch(:disable_modules, [])
+
+      # enable specific modules
+      modules.each do |name|
+        mod_name = name.include?('.xml') ? "#{name}" : "#{name}.xml"
+        mod_path = "#{latest_release}/app/etc/modules/#{mod_path}"
+        # disable the module
+        run "perl -pi -e 's/true/false/g' #{mod_path}" if remote_file_exists?("#{mod_path}")
+      end
+    end
   end
 
   # --------------------------------------------

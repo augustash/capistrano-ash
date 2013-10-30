@@ -44,10 +44,10 @@ end
 
 # set the permissions for files recurisvely from the starting directory (dir_path)
 def set_perms_files(dir_path, perm = 644)
-  try_sudo "find #{dir_path} -type f -print0 | xargs -0 chmod #{perm}"
+  run "find #{dir_path} -type f -print0 | xargs -0 #{sudo} chmod #{perm}" if remote_dir_exists?(dir_path)
 end
 
 # set the permissions for directories recurisvely from the starting directory (dir_path)
 def set_perms_dirs(dir_path, perm = 755)
-  try_sudo "find #{dir_path} -type d -print0 | xargs -0 chmod #{perm}" if File.directory?(dir_path)
+  run "find #{dir_path} -type d -print0 | xargs -0 #{sudo} chmod #{perm}" if remote_dir_exists?(dir_path)
 end

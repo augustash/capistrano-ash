@@ -14,6 +14,14 @@ configuration = Capistrano::Configuration.respond_to?(:instance) ?
 
 configuration.load do
 
+  # --------------------------------------------
+  # Deployment dependencies
+  #
+  #     $ cap <stage> deploy:check
+  #
+  # --------------------------------------------
+  depend :remote, :command, 'rsync'
+
   # Set default stages
   set :stages, %w(staging production)
   set :default_stage, "staging"
@@ -25,6 +33,7 @@ configuration.load do
   after "deploy:setup_shared", "deploy:setup_backup"
   after "deploy:finalize_update", "ash:htaccess"
   after "deploy", "deploy:cleanup"
+  after "deploy", "seo:robots"
 
   # --------------------------------------------
   # Default variables
@@ -38,7 +47,7 @@ configuration.load do
   set :dbpass,            proc{Capistrano::CLI.password_prompt("Database password for '#{dbuser}':")}
   set :dbname,            proc{text_prompt("Database name: ")}
   _cset :mysqldump,       "mysqldump"
-  _cset :dump_options,    "--single-transaction --create-options --quick"
+  _cset :dump_options,    "--single-transaction --create-options --quick --triggers --routines"
 
   # Source Control
   set :group_writable,    false
@@ -53,7 +62,7 @@ configuration.load do
   set :copy_strategy,     :checkout
   set :copy_compression,  :bz2
   set :copy_exclude,      [".svn", ".git*", ".DS_Store", "*.sample", "LICENSE*", "Capfile",
-    "RELEASE*", "*.rb", "*.sql", "nbproject", "_template"]
+    "RELEASE*", "config/deploy", "*.rb", "*.sql", "nbproject", "_template"]
 
   # phpMyAdmin version
   set :pma_version,       "3.4.5"
@@ -137,29 +146,44 @@ configuration.load do
       will use sudo to clean up the old releases, but if sudo is not available \
       for your environment, set the :use_sudo variable to false instead. \
 
-      Overridden to set/reset file and directory permissions
+      OVERRIDES:
+      + set/reset file and directory permissions
+      + remove old releases per host instead of assuming the releases are \
+        the same for every host
+
+      see http://blog.perplexedlabs.com/2010/09/08/improved-deploycleanup-for-capistrano/
     DESC
     task :cleanup, :except => { :no_release => true } do
       count = fetch(:keep_releases, 5).to_i
-      local_releases = capture("ls -xt #{releases_path}").split.reverse
-      if count >= local_releases.length
-        logger.important "no old releases to clean up"
-      else
-        logger.info "keeping #{count} of #{local_releases.length} deployed releases"
-        directories = (local_releases - local_releases.last(count)).map { |release|
-          File.join(releases_path, release) }.join(" ")
+      cmd = "ls -xt #{releases_path}"
+      run cmd do |channel, stream, data|
+        local_releases = data.split.reverse
+        if count >= local_releases.length
+          logger.important "no old releases to clean up on #{channel[:server]}"
+        else
+          logger.info "keeping #{count} of #{local_releases.length} deployed releases on #{channel[:server]}"
 
-        directories.split(" ").each do |dir|
-          # adding a chown -R method to fix permissions on the directory
-          # this should help with issues related to permission denied
-          # as in issues #28 and #30
-          try_sudo "chown -R #{user}:#{user} #{dir}"
+          directories = (local_releases - local_releases.last(count)).map { |release|
+            File.join(releases_path, release)
+          }.join(" ")
 
-          set_perms_dirs(dir)
-          set_perms_files(dir)
+          directories.split(" ").each do |dir|
+            begin
+              # adding a chown -R method to fix permissions on the directory
+              # this should help with issues related to permission denied
+              # as in issues #28 and #30
+              run "#{sudo} chown -R #{user}:#{user} #{dir}" if remote_dir_exists?(dir)
+
+              set_perms_dirs(dir)
+              set_perms_files(dir)
+            rescue Exception => e
+              logger.important e.message
+              logger.info "Moving on to the next directory..."
+            end
+          end
+
+          run "#{sudo} rm -rf #{directories}", :hosts => [channel[:server]]
         end
-
-        try_sudo "rm -rf #{directories}"
       end
     end
   end
@@ -201,6 +225,39 @@ configuration.load do
   end
 
   # --------------------------------------------
+  # SEO - robots.txt files
+  # --------------------------------------------
+  namespace :seo do
+    desc <<-DESC
+      Creates a robots.txt appropriate for the environment
+
+      staging     => block all robots from indexing the site
+      production  => allow robots to index the site
+    DESC
+    task :robots, :roles => :web do
+      case "#{stage}"
+      when 'staging'
+        # block all robots from indexing anything
+        robots_txt = <<-EOF
+User-agent: *
+Disallow: /
+EOF
+      when 'production'
+        # allow all robots to index anything
+        robots_txt = <<-EOF
+User-agent: *
+Disallow:
+EOF
+      else
+        logger.important "SKIPPING creation of robots.txt because the #{stage} stage was unanticipated. You should override the `seo:robots` task with your own implementation."
+      end
+
+      # echo the file out into the root of the latest_release directory
+      put robots_txt, "#{latest_release}/robots.txt"
+    end
+  end
+
+  # --------------------------------------------
   # PHP tasks
   # --------------------------------------------
   namespace :php do
@@ -216,6 +273,24 @@ configuration.load do
       end
     end
   end
+
+  # --------------------------------------------
+  # NGINX tasks
+  # --------------------------------------------
+  namespace :nginx do
+    %w(start stop restart status).each do |cmd|
+      desc "[internal] - #{cmd.upcase} nginx and php-fpm"
+      task cmd.to_sym, :roles => :web do
+
+        fetch (:nginx_init_command, "/etc/init.d/nginx")
+        fetch (:phpfpm_init_command, "/etc/init.d/php-fpm")
+
+        run "#{sudo} #{nginx_init_command} #{cmd}"
+        run "#{sudo} #{phpfpm_init_command} #{cmd}"
+      end
+    end
+  end
+
 
   # --------------------------------------------
   # Remote/Local database migration tasks
@@ -348,7 +423,7 @@ configuration.load do
       You can specify which files or directories to exclude from being \
       backed up (i.e., log files, sessions, cache) by setting the \
       :backup_exclude variable
-          set(:backup_exclude) { [ "var/", "tmp/", logs/debug.log ] }
+          set(:backup_exclude) { [ "var/", "tmp/", "logs/debug.log" ] }
     DESC
     task :web, :roles => :web do
       if previous_release
@@ -369,17 +444,22 @@ configuration.load do
         # --------------------------
         # SET/RESET PERMISSIONS
         # --------------------------
-        set_perms_dirs("#{tmp_backups_path}/#{release_name}", 755)
-        set_perms_files("#{tmp_backups_path}/#{release_name}", 644)
+        begin
+          set_perms_dirs("#{tmp_backups_path}/#{release_name}", 755)
+          set_perms_files("#{tmp_backups_path}/#{release_name}", 644)
 
-        # create the tarball of the previous release
-        set :archive_name, "release_B4_#{release_name}.tar.gz"
-        logger.debug "Creating a Tarball of the previous release in #{backups_path}/#{archive_name}"
-        run "cd #{tmp_backups_path} && tar -cvpf - ./#{release_name}/ | gzip -c --best > #{backups_path}/#{archive_name}"
+          # create the tarball of the previous release
+          set :archive_name, "release_B4_#{release_name}.tar.gz"
+          logger.debug "Creating a Tarball of the previous release in #{backups_path}/#{archive_name}"
+          run "cd #{tmp_backups_path} && tar -cvpf - ./#{release_name}/ | gzip -c --best > #{backups_path}/#{archive_name}"
 
-        # remove the the temporary copy
-        logger.debug "Removing the tempory copy"
-        run "rm -rf #{tmp_backups_path}/#{release_name}"
+          # remove the the temporary copy
+          logger.debug "Removing the temporary copy"
+          run "rm -rf #{tmp_backups_path}/#{release_name}"
+        rescue Exception => e
+          logger.debug e.message
+          logger.info "Error setting permissions on backed up files but continuing on..."
+        end
       else
         logger.important "no previous release to backup; backup of files skipped"
       end
@@ -392,8 +472,13 @@ configuration.load do
         dump_options  = fetch(:dump_options, "--single-transaction --create-options --quick")
 
         puts "Backing up the database now and putting dump file in the previous release directory"
+
+        # create the temporary copy for the release directory
+        # which we'll tarball in the backup:web task
+        run "mkdir -p #{tmp_backups_path}/#{release_name}"
+
         # define the filename (include the current_path so the dump file will be within the directory)
-        filename = "#{current_path}/#{dbname}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
+        filename = "#{tmp_backups_path}/#{release_name}/#{dbname}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
         # dump the database for the proper environment
         run "#{mysqldump} #{dump_options} -u #{dbuser} -p #{dbname} | gzip -c --best > #{filename}" do |ch, stream, out|
             ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
@@ -423,11 +508,11 @@ configuration.load do
 
           # fix permissions on the the files and directories before removing them
           archives.split(" ").each do |backup|
-            set_perms_dirs("#{backup}", 755) if File.directory?(backup)
-            set_perms_files("#{backup}", 644)
+            set_perms_dirs("#{backup}", 755) if remote_dir_exists?(backup)
+            set_perms_files("#{backup}", 644) if remote_dir_exists?(backup)
           end
 
-          try_sudo "rm -rf #{archives}"
+          run "rm -rf #{archives}"
         rescue Exception => e
           logger.important e.message
         end
@@ -544,6 +629,51 @@ configuration.load do
     end
   end
 
+  # --------------------------------------------
+  # Track changes made to remote release file directory via a throw away git repo
+  # --------------------------------------------
+  namespace :watchdog do
+    desc "Track changes made to remote release file directory via a throw away git repo"
+    task :default, :roles => :web do
+      watchdog.init_git_repo
+      watchdog.init_git_ignore
+      watchdog.commit
+      watchdog.check_status
+    end
+
+    desc <<-DESC
+      [internal] initialize a git repo in the latest release directory to track changes anybody makes to the filesystem
+    DESC
+    task :init_git_repo, :roles => :web do
+      logger.important "Creating a local git repo in #{latest_release} to track changes done outside of our git-flow process"
+      run "cd #{latest_release} && git init ." unless remote_dir_exists?("#{latest_release}/.git")
+    end
+
+    desc <<-DESC
+      [internal] copy the .gitignore file from the cached-copy directory to only commit what we really care about
+    DESC
+    task :init_git_ignore, :roles => :web do
+      logger.important "Copying the .gitignore file from the cached-copy directory"
+      run "ln -s #{shared_path}/cached-copy/.gitignore #{latest_release}/.gitignore"
+    end
+
+    desc <<-DESC
+      [internal] Adds and commits the files in the latest release directory
+    DESC
+    task :commit, :roles => :web do
+      logger.important "Adding and committing the files in the latest release directory"
+      run "cd #{latest_release} && git add . && git commit -m 'Keeping track of changes done outside of AAI git-flow'"
+    end
+
+    desc <<-DESC
+      [internal] Adds and commits the files in the latest release directory
+    DESC
+    task :check_status, :roles => :web do
+      logger.important "Checking status of git repo for any changes in watched files/directories"
+      run "cd #{latest_release} && git status"
+    end
+
+  end
 
   # --------------------------------------------
   # Remote File/Directory test tasks
