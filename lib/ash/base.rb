@@ -33,6 +33,7 @@ configuration.load do
   after "deploy:setup_shared", "deploy:setup_backup"
   after "deploy:finalize_update", "ash:htaccess"
   after "deploy", "deploy:cleanup"
+  after "deploy", "seo:robots"
 
   # --------------------------------------------
   # Default variables
@@ -205,6 +206,39 @@ configuration.load do
       else
         logger.important "Failed to move the .htaccess file in #{latest_release} because an unknown pattern was used"
       end
+    end
+  end
+
+  # --------------------------------------------
+  # SEO - robots.txt files
+  # --------------------------------------------
+  namespace :seo do
+    desc <<-DESC
+      Creates a robots.txt appropriate for the environment
+
+      staging     => block all robots from indexing the site
+      production  => allow robots to index the site
+    DESC
+    task :robots, :roles => :web do
+      case "#{stage}"
+      when 'staging'
+        # block all robots from indexing anything
+        robots_txt = <<-EOF
+User-agent: *
+Disallow: /
+EOF
+      when 'production'
+        # allow all robots to index anything
+        robots_txt = <<-EOF
+User-agent: *
+Disallow:
+EOF
+      else
+        logger.important "SKIPPING creation of robots.txt because the #{stage} stage was unanticipated. You should override the `seo:robots` task with your own implementation."
+      end
+
+      # echo the file out into the root of the latest_release directory
+      put robots_txt, "#{latest_release}/robots.txt"
     end
   end
 
