@@ -562,6 +562,51 @@ configuration.load do
     end
   end
 
+  # --------------------------------------------
+  # Track changes made to remote release file directory via a throw away git repo
+  # --------------------------------------------
+  namespace :watchdog do
+    desc "Track changes made to remote release file directory via a throw away git repo"
+    task :default, :roles => :web do
+      watchdog.init_git_repo
+      watchdog.init_git_ignore
+      watchdog.commit
+      watchdog.check_status
+    end
+
+    desc <<-DESC
+      [internal] initialize a git repo in the latest release directory to track changes anybody makes to the filesystem
+    DESC
+    task :init_git_repo, :roles => :web do
+      logger.important "Creating a local git repo in #{latest_release} to track changes done outside of our git-flow process"
+      run "cd #{latest_release} && git init ." unless remote_dir_exists?("#{latest_release}/.git")
+    end
+
+    desc <<-DESC
+      [internal] copy the .gitignore file from the cached-copy directory to only commit what we really care about
+    DESC
+    task :init_git_ignore, :roles => :web do
+      logger.important "Copying the .gitignore file from the cached-copy directory"
+      run "ln -s #{shared_path}/cached-copy/.gitignore #{latest_release}/.gitignore"
+    end
+
+    desc <<-DESC
+      [internal] Adds and commits the files in the latest release directory
+    DESC
+    task :commit, :roles => :web do
+      logger.important "Adding and committing the files in the latest release directory"
+      run "cd #{latest_release} && git add . && git commit -m 'Keeping track of changes done outside of AAI git-flow'"
+    end
+
+    desc <<-DESC
+      [internal] Adds and commits the files in the latest release directory
+    DESC
+    task :check_status, :roles => :web do
+      logger.important "Checking status of git repo for any changes in watched files/directories"
+      run "cd #{latest_release} && git status"
+    end
+
+  end
 
   # --------------------------------------------
   # Remote File/Directory test tasks
