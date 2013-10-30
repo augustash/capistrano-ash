@@ -10,6 +10,14 @@ configuration = Capistrano::Configuration.respond_to?(:instance) ?
 configuration.load do
 
   # --------------------------------------------
+  # Deployment dependencies
+  #
+  #     $ cap <stage> deploy:check
+  #
+  # --------------------------------------------
+  depend :remote, :command, 'rsync'
+
+  # --------------------------------------------
   # Magento Variables
   # --------------------------------------------
   set :enable_modules, []
