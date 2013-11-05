@@ -583,11 +583,11 @@ EOF
         if !compass_bin.nil?
           if watched_dirs.is_a? String
             logger.debug "Compiling SASS for #{watched_dirs}"
-            system "#{compass_bin} compile --output-style #{compass_output} --environment #{compass_env} ./#{watched_dirs}"
+            system "#{compass_bin} clean ./#{watched_dirs} && #{compass_bin} compile --output-style #{compass_output} --environment #{compass_env} ./#{watched_dirs}"
           elsif watched_dirs.is_a? Array
             logger.debug "Compiling SASS for #{watched_dirs.join(', ')}"
             watched_dirs.each do |dir|
-              system "#{compass_bin} compile --output-style #{compass_output} --environment #{compass_env} ./#{dir}"
+              system "#{compass_bin} clean ./#{dir} && #{compass_bin} compile --output-style #{compass_output} --environment #{compass_env} ./#{dir}"
             end
           else
             logger.debug "Unable to compile SASS because :compass_watched_dirs was neither a String nor an Array"
