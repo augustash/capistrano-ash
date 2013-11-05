@@ -75,7 +75,7 @@ configuration.load do
 
       # create shared directories
       multisites.each_pair do |folder, url|
-        try_sudo "mkdir -p #{shared_path}/#{url}/files"
+        run "mkdir -p #{shared_path}/#{url}/files"
       end
 
       # set correct permissions
@@ -163,7 +163,7 @@ configuration.load do
         # symlinks the appropriate environment's settings.php file
         symlink_config_file
 
-        try_sudo "ln -nfs #{shared_path}/#{url}/files #{latest_release}/sites/#{url}/files"
+        run "ln -nfs #{shared_path}/#{url}/files #{latest_release}/sites/#{url}/files"
         run "#{drush_bin} -l #{url} -r #{current_path} vset --yes file_directory_path sites/#{url}/files"
       end
     end
@@ -207,7 +207,7 @@ configuration.load do
     desc "Protect system files"
     task :protect, :roles => :web, :except => { :no_release => true } do
       multisites.each_pair do |folder, url|
-        try_sudo "chmod 644 #{latest_release}/sites/#{url}/settings.php*"
+        run "chmod 644 #{latest_release}/sites/#{url}/settings.php*"
       end
     end
 
@@ -239,7 +239,7 @@ configuration.load do
       DESC
       task :setup_ubercart_shared, :roles => :web, :except => { :no_release => true } do
         multisites.each_pair do |folder, url|
-          try_sudo "mkdir -p #{shared_path}/#{url}/#{uc_root}"
+          run "mkdir -p #{shared_path}/#{url}/#{uc_root}"
         end
       end
 
@@ -258,13 +258,13 @@ configuration.load do
       task :secure_downloadable_files, :except => { :no_release => true } do
         # loop through the multisites and move files
         multisites.each_pair do |folder, url|
-          try_sudo "mkdir -p #{shared_path}/#{url}/#{uc_root}/#{uc_downloadable_products_root}"
+          run "mkdir -p #{shared_path}/#{url}/#{uc_root}/#{uc_downloadable_products_root}"
 
           ubercart_dir = "#{latest_release}/sites/#{url}/files/#{uc_root}/#{uc_downloadable_products_root}"
 
           case true
             when remote_dir_exists?("#{ubercart_dir}")
-              try_sudo "rsync -rltDvzog #{ubercart_dir} #{shared_path}/#{url}/#{uc_root}/#{uc_downloadable_products_root}"
+              run "rsync -rltDvzog #{ubercart_dir} #{shared_path}/#{url}/#{uc_root}/#{uc_downloadable_products_root}"
             else
               logger.important "Failed to rsync the ubercart downloadable products in #{ubercart_dir} because the directory doesn't exist"
           end
@@ -292,7 +292,7 @@ configuration.load do
       task :secure_encryption_key, :roles => :web, :except => { :no_release => true } do
         # loop through the multisites and move keys
         multisites.each_pair do |folder, url|
-          try_sudo "mkdir -p #{shared_path}/#{url}/#{uc_root}/#{uc_encryption_keys_root}"
+          run "mkdir -p #{shared_path}/#{url}/#{uc_root}/#{uc_encryption_keys_root}"
 
           # update the ubercart's database tracking of where the
           # root file path is for encryption keys. This should
