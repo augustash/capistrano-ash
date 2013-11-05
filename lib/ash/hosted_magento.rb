@@ -7,6 +7,11 @@ configuration = Capistrano::Configuration.respond_to?(:instance) ?
   Capistrano.configuration(:must_exist)
 
 configuration.load do
+
+  # shared servers typically don't allow `sudo`,
+  # so this will tell `try_sudo` to run as the `:user` instead
+  set :use_sudo, false
+
   # --------------------------------------------
   # Default variables
   # --------------------------------------------

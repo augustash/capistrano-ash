@@ -8,6 +8,10 @@ configuration = Capistrano::Configuration.respond_to?(:instance) ?
 
 configuration.load do
 
+  # allow try_sudo methods to actually run sudo
+  set :use_sudo, true
+  # set :admin_runner, "#{user}" # specify the :admin_runner if you need to run it as another user other than root
+
   # --------------------------------------------
   # Setting defaults
   # --------------------------------------------

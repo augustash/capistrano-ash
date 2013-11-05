@@ -25,6 +25,11 @@ configuration.load do
   _cset :dump_options,    "" # blank options b/c of MYISAM engine (unless anyone knows options that should be included)
 
 
+  # allow try_sudo methods to actually run sudo
+  set :use_sudo, true
+  # set :admin_runner, "#{user}" # specify the :admin_runner if you need to run it as another user other than root
+
+
   # --------------------------------------------
   # Ubercart Files/Folders
   #   assumes ubercart files are located
