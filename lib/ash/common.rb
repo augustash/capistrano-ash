@@ -44,10 +44,45 @@ end
 
 # set the permissions for files recurisvely from the starting directory (dir_path)
 def set_perms_files(dir_path, perm = 644)
-  run "find #{dir_path} -type f -print0 | xargs -0 #{try_sudo} chmod #{perm}" if remote_dir_exists?(dir_path)
+  begin
+    run "find #{dir_path} -type f -print0 | xargs -0 #{try_sudo} chmod #{perm}" if remote_dir_exists?(dir_path)
+  rescue Exception => e
+    logger.important "FAILED to set permissions of #{perm} on files within #{dir_path}!"
+    logger.important e.message
+    logger.important "Trying to set permissions without using xargs"
+    begin
+      run "find #{dir_path} -type f -exec #{try_sudo} chmod #{perm} {} \\;"  if remote_dir_exists?(dir_path)
+    rescue Exception => e
+      logger.important "FAILED second attempt to set permissions of #{perm} on files within #{dir_path}!"
+      logger.important e.message
+    end
+  end
 end
 
-# set the permissions for directories recurisvely from the starting directory (dir_path)
+# set the permissions for directories recursively from the starting directory (dir_path)
 def set_perms_dirs(dir_path, perm = 755)
-  run "find #{dir_path} -type d -print0 | xargs -0 #{try_sudo} chmod #{perm}" if remote_dir_exists?(dir_path)
+  begin
+    run "find #{dir_path} -type d -print0 | xargs -0 #{try_sudo} chmod #{perm}" if remote_dir_exists?(dir_path)
+  rescue Exception => e
+    logger.important "FAILED to set permissions of #{perm} on directories within #{dir_path}!"
+    logger.important e.message
+    logger.important "Trying to set permissions without using xargs"
+    begin
+      run "find #{dir_path} -type d -exec #{try_sudo} chmod #{perm} {} \\;"  if remote_dir_exists?(dir_path)
+    rescue Exception => e
+      logger.important "FAILED second attempt to set permissions of #{perm} on directories within #{dir_path}!"
+      logger.important e.message
+    end
+  end
+end
+
+# set permission on specific file or directory path instead of doing
+# it with a big hammer like set_perms_files or set_perms_dir
+def set_perms(path, perm = 644)
+  begin
+    try_sudo "chmod #{perm} #{path}" if remote_file_exists?(path) || remote_dir_exists?(path)
+  rescue Exception => e
+    logger.important "FAILED to set permission of #{perm} on #{path}"
+    logger.important e.message
+  end
 end
