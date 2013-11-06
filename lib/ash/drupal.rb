@@ -18,17 +18,26 @@ configuration.load do
   depend :remote, :command, 'rsync'
 
   # --------------------------------------------
+  # try_sudo configuration
+  # --------------------------------------------
+  set :use_sudo, true                 # allow try_sudo methods to actually run via sudo
+  # set(:admin_runner) {"#{user}"}    # specify the :admin_runner if you need to run it as another user other than root
+
+  # Clear out the default prompt (i.e., `sudo -p 'sudo password: '`) to fall back
+  # to just using `sudo` due to the concatenation in the sudo method.
+  #
+  # This assumes that you have set up your SSH user to have passwordless sudo
+  # setup for common commands (e.g., mv, cp, ln, mkdir, chown, chmod, rm, etc.)
+  #
+  # (see: https://github.com/capistrano/capistrano/blob/legacy-v2/lib/capistrano/configuration/actions/invocation.rb#L229-L237)
+  set :sudo_prompt, ''
+
+  # --------------------------------------------
   # Setting defaults
   # --------------------------------------------
   proc{_cset( :multisites, {"#{application}" => "#{application}"} )}
   set :drush_bin, "drush"
   _cset :dump_options,    "" # blank options b/c of MYISAM engine (unless anyone knows options that should be included)
-
-
-  # allow try_sudo methods to actually run sudo
-  set :use_sudo, true
-  # set :admin_runner, "#{user}" # specify the :admin_runner if you need to run it as another user other than root
-
 
   # --------------------------------------------
   # Ubercart Files/Folders
