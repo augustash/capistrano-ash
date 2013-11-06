@@ -18,12 +18,26 @@ configuration.load do
   depend :remote, :command, 'rsync'
 
   # --------------------------------------------
+  # try_sudo configuration
+  # --------------------------------------------
+  set :use_sudo, true                 # allow try_sudo methods to actually run via sudo
+  # set(:admin_runner) {"#{user}"}    # specify the :admin_runner if you need to run it as another user other than root
+
+  # Clear out the default prompt (i.e., `sudo -p 'sudo password: '`) to fall back
+  # to just using `sudo` due to the concatenation in the sudo method.
+  #
+  # This assumes that you have set up your SSH user to have passwordless sudo
+  # setup for common commands (e.g., mv, cp, ln, mkdir, chown, chmod, rm, etc.)
+  #
+  # (see: https://github.com/capistrano/capistrano/blob/legacy-v2/lib/capistrano/configuration/actions/invocation.rb#L229-L237)
+  set :sudo_prompt, ''
+
+  # --------------------------------------------
   # Setting defaults
   # --------------------------------------------
   proc{_cset( :multisites, {"#{application}" => "#{application}"} )}
   set :drush_bin, "drush"
   _cset :dump_options,    "" # blank options b/c of MYISAM engine (unless anyone knows options that should be included)
-
 
   # --------------------------------------------
   # Ubercart Files/Folders
@@ -70,7 +84,7 @@ configuration.load do
 
       # create shared directories
       multisites.each_pair do |folder, url|
-        try_sudo "mkdir -p #{shared_path}/#{url}/files"
+        run "mkdir -p #{shared_path}/#{url}/files"
       end
 
       # set correct permissions
@@ -158,7 +172,7 @@ configuration.load do
         # symlinks the appropriate environment's settings.php file
         symlink_config_file
 
-        try_sudo "ln -nfs #{shared_path}/#{url}/files #{latest_release}/sites/#{url}/files"
+        run "ln -nfs #{shared_path}/#{url}/files #{latest_release}/sites/#{url}/files"
         run "#{drush_bin} -l #{url} -r #{current_path} vset --yes file_directory_path sites/#{url}/files"
       end
     end
@@ -202,7 +216,7 @@ configuration.load do
     desc "Protect system files"
     task :protect, :roles => :web, :except => { :no_release => true } do
       multisites.each_pair do |folder, url|
-        try_sudo "chmod 644 #{latest_release}/sites/#{url}/settings.php*"
+        run "chmod 644 #{latest_release}/sites/#{url}/settings.php*"
       end
     end
 
@@ -234,7 +248,7 @@ configuration.load do
       DESC
       task :setup_ubercart_shared, :roles => :web, :except => { :no_release => true } do
         multisites.each_pair do |folder, url|
-          try_sudo "mkdir -p #{shared_path}/#{url}/#{uc_root}"
+          run "mkdir -p #{shared_path}/#{url}/#{uc_root}"
         end
       end
 
@@ -253,13 +267,13 @@ configuration.load do
       task :secure_downloadable_files, :except => { :no_release => true } do
         # loop through the multisites and move files
         multisites.each_pair do |folder, url|
-          try_sudo "mkdir -p #{shared_path}/#{url}/#{uc_root}/#{uc_downloadable_products_root}"
+          run "mkdir -p #{shared_path}/#{url}/#{uc_root}/#{uc_downloadable_products_root}"
 
           ubercart_dir = "#{latest_release}/sites/#{url}/files/#{uc_root}/#{uc_downloadable_products_root}"
 
           case true
             when remote_dir_exists?("#{ubercart_dir}")
-              try_sudo "rsync -rltDvzog #{ubercart_dir} #{shared_path}/#{url}/#{uc_root}/#{uc_downloadable_products_root}"
+              run "rsync -rltDvzog #{ubercart_dir} #{shared_path}/#{url}/#{uc_root}/#{uc_downloadable_products_root}"
             else
               logger.important "Failed to rsync the ubercart downloadable products in #{ubercart_dir} because the directory doesn't exist"
           end
@@ -287,7 +301,7 @@ configuration.load do
       task :secure_encryption_key, :roles => :web, :except => { :no_release => true } do
         # loop through the multisites and move keys
         multisites.each_pair do |folder, url|
-          try_sudo "mkdir -p #{shared_path}/#{url}/#{uc_root}/#{uc_encryption_keys_root}"
+          run "mkdir -p #{shared_path}/#{url}/#{uc_root}/#{uc_encryption_keys_root}"
 
           # update the ubercart's database tracking of where the
           # root file path is for encryption keys. This should

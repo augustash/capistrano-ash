@@ -28,7 +28,7 @@ configuration.load do
       end
 
       # set correct permissions for a shared hosting environment
-      set_perms_dirs("#{shared_path}")
+      run "chmod -R 755 #{shared_path}/*"
     end
   end
 end

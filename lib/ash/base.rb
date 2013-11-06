@@ -109,8 +109,8 @@ configuration.load do
     task :setup, :except => { :no_release => true } do
       dirs = [deploy_to, releases_path, shared_path]
       dirs += shared_children.map { |d| File.join(shared_path, d.split('/').last) }
-      try_sudo "mkdir -p #{dirs.join(' ')}"
-      try_sudo "chmod 755 #{dirs.join(' ')}" if fetch(:group_writable, true)
+      run "mkdir -p #{dirs.join(' ')}"
+      run "chmod 755 #{dirs.join(' ')}" if fetch(:group_writable, true)
     end
 
     desc "Setup shared application directories and permissions after initial setup"
@@ -120,7 +120,7 @@ configuration.load do
 
     desc "Setup backup directory for database and web files"
     task :setup_backup, :except => { :no_release => true } do
-      try_sudo "mkdir -p #{backups_path} #{tmp_backups_path} && chmod 755 #{backups_path}"
+      run "mkdir -p #{backups_path} #{tmp_backups_path} && chmod 755 #{backups_path}"
     end
 
     desc <<-DESC
@@ -164,7 +164,7 @@ configuration.load do
               # adding a chown -R method to fix permissions on the directory
               # this should help with issues related to permission denied
               # as in issues #28 and #30
-              run "#{sudo} chown -R #{user}:#{user} #{dir}" if remote_dir_exists?(dir)
+              run "#{try_sudo} chown -R #{user}:#{user} #{dir}" if remote_dir_exists?(dir)
 
               set_perms_dirs(dir)
               set_perms_files(dir)
@@ -174,7 +174,7 @@ configuration.load do
             end
           end
 
-          run "#{sudo} rm -rf #{directories}", :hosts => [channel[:server]]
+          run "#{try_sudo} rm -rf #{directories}", :hosts => [channel[:server]]
         end
       end
     end
@@ -277,8 +277,8 @@ EOF
         nginx_cmd   = fetch(:nginx_init_command, "/etc/init.d/nginx")
         phpfpm_cmd  = fetch(:phpfpm_init_command, "/etc/init.d/php-fpm")
 
-        run "#{sudo} #{nginx_cmd} #{cmd}"
-        run "#{sudo} #{phpfpm_cmd} #{cmd}"
+        run "#{try_sudo} #{nginx_cmd} #{cmd}"
+        run "#{try_sudo} #{phpfpm_cmd} #{cmd}"
       end
     end
   end
@@ -583,11 +583,11 @@ EOF
         if !compass_bin.nil?
           if watched_dirs.is_a? String
             logger.debug "Compiling SASS for #{watched_dirs}"
-            system "#{compass_bin} compile --output-style #{compass_output} --environment #{compass_env} ./#{watched_dirs}"
+            system "#{compass_bin} clean ./#{watched_dirs} && #{compass_bin} compile --output-style #{compass_output} --environment #{compass_env} ./#{watched_dirs}"
           elsif watched_dirs.is_a? Array
             logger.debug "Compiling SASS for #{watched_dirs.join(', ')}"
             watched_dirs.each do |dir|
-              system "#{compass_bin} compile --output-style #{compass_output} --environment #{compass_env} ./#{dir}"
+              system "#{compass_bin} clean ./#{dir} && #{compass_bin} compile --output-style #{compass_output} --environment #{compass_env} ./#{dir}"
             end
           else
             logger.debug "Unable to compile SASS because :compass_watched_dirs was neither a String nor an Array"

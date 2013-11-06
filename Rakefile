@@ -11,7 +11,7 @@ begin
     gemspec.homepage    = "https://github.com/augustash/capistrano-ash"
     gemspec.authors     = ["August Ash"]
     # Gem dependencies
-    gemspec.add_dependency('capistrano', '>= 2.12.0')
+    gemspec.add_dependency('capistrano', '~> 2.15.0')
     gemspec.add_dependency('capistrano-ext')
     gemspec.add_dependency('railsless-deploy')
     gemspec.add_dependency('capistrano_colors')
