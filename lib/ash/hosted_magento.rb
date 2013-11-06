@@ -35,13 +35,14 @@ configuration.load do
       run "mkdir -p #{shared_path}/var"
 
       # set correct permissions
-      run "chmod 755 #{shared_path}/*"
+      set_perms("#{shared_path}/*", 755)
     end
 
     desc "[internal] Touches up the released code. This is called by update_code after the basic deploy finishes."
     task :finalize_update, :roles => :web, :except => { :no_release => true } do
       # synchronize media directory with shared data
       run "rsync -rltDvzog #{latest_release}/media/ #{shared_path}/media/"
+      set_perms("#{shared_path}/media/", 755)
 
       # put ".htaccess" in place
       run "mv #{latest_release}/htaccess.dist #{latest_release}/.htaccess"
@@ -54,25 +55,9 @@ configuration.load do
 
       # set the file and directory permissions
       ash.fixperms
-    end
-  end
-
-  namespace :magento do
-    desc "Purge Magento cache directory"
-    task :purge_cache, :roles => :web, :except => { :no_release => true } do
-      run "rm -Rf #{shared_path}/var/cache/*"
-    end
-  end
-
-  # --------------------------------------------
-  # Overloaded Ash tasks
-  # --------------------------------------------
-  namespace :ash do
-    desc "Set standard permissions for Ash servers"
-    task :fixperms, :roles => :web, :except => { :no_release => true } do
-      # chmod the files and directories.
-      run "find #{latest_release} -type d -exec chmod 755 {} \\;"
-      run "find #{latest_release} -type f -exec chmod 644 {} \\;"
+      set_perms("#{latest_release}/pear", 400)
+      set_perms("#{latest_release}/mage", 400)
+      set_perms("#{latest_release}/app/etc", "o+w")
     end
   end
 end
