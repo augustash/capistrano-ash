@@ -72,9 +72,9 @@ configuration.load do
     desc "Setup shared application directories and permissions after initial setup"
     task :setup_shared do
       # remove Capistrano specific directories
-      run "rm -Rf #{shared_path}/log"
-      run "rm -Rf #{shared_path}/pids"
-      run "rm -Rf #{shared_path}/system"
+      try_sudo "rm -Rf #{shared_path}/log"
+      try_sudo "rm -Rf #{shared_path}/pids"
+      try_sudo "rm -Rf #{shared_path}/system"
 
       # create shared directories
       run "mkdir -p #{shared_path}/includes"
@@ -83,14 +83,14 @@ configuration.load do
       run "mkdir -p #{shared_path}/var"
 
       # set correct permissions
-      run "chmod 777 #{shared_path}/*"
+      set_perms("#{shared_path}/*", 777)
     end
 
     desc "[internal] Touches up the released code. This is called by update_code after the basic deploy finishes."
     task :finalize_update, :roles => :web, :except => { :no_release => true } do
       # synchronize media directory with shared data
       run "rsync -rltDvzog #{latest_release}/media/ #{shared_path}/media/"
-      run "#{sudo} chmod -R 777 #{shared_path}/media/"
+      set_perms("#{shared_path}/media/", 777)
 
       # remove directories that will be shared
       run "rm -Rf #{latest_release}/includes"
@@ -100,9 +100,9 @@ configuration.load do
 
       # set the file and directory permissions
       ash.fixperms
-      run "chmod 400 #{latest_release}/pear" if remote_file_exists?("#{latest_release}/pear")
-      run "chmod 400 #{latest_release}/mage" if remote_file_exists?("#{latest_release}/mage")
-      run "chmod o+w #{latest_release}/app/etc"
+      set_perms("#{latest_release}/pear", 400)
+      set_perms("#{latest_release}/mage", 400)
+      set_perms("#{latest_release}/app/etc", "o+w")
     end
 
     namespace :web do
@@ -142,7 +142,8 @@ configuration.load do
 
     desc "Purge Magento cache directory"
     task :purge_cache, :roles => :web, :except => { :no_release => true } do
-      run "#{sudo} rm -Rf #{shared_path}/var/cache/*"
+      try_sudo "rm -Rf #{shared_path}/var/cache/*"
+      try_sudo "rm -Rf #{shared_path}/var/full_page_cache/*" if remote_dir_exists?("#{shared_path}/var/full_page_cache}")
     end
 
     desc "Watch Magento system log"
@@ -165,9 +166,8 @@ configuration.load do
 
     desc "Clear the Magento Cache"
     task :cc, :roles => [:web, :app], :except => { :no_release => true } do
-      run "#{sudo} chown -R #{user}:#{user} #{shared_path}/var/*"
+      try_sudo "chown -R #{user}:#{user} #{shared_path}/var/*"
       magento.purge_cache
-      run "#{sudo} rm -rf #{shared_path}/var/full_page_cache/*"
     end
 
     desc "Enable display errors"
