@@ -9,6 +9,21 @@ configuration = Capistrano::Configuration.respond_to?(:instance) ?
 configuration.load do
 
   # --------------------------------------------
+  # try_sudo configuration
+  # --------------------------------------------
+  set :use_sudo, true                 # allow try_sudo methods to actually run via sudo
+  # set(:admin_runner) {"#{user}"}    # specify the :admin_runner if you need to run it as another user other than root
+
+  # Clear out the default prompt (i.e., `sudo -p 'sudo password: '`) to fall back
+  # to just using `sudo` due to the concatenation in the sudo method.
+  #
+  # This assumes that you have set up your SSH user to have passwordless sudo
+  # setup for common commands (e.g., mv, cp, ln, mkdir, chown, chmod, rm, etc.)
+  #
+  # (see: https://github.com/capistrano/capistrano/blob/legacy-v2/lib/capistrano/configuration/actions/invocation.rb#L229-L237)
+  set :sudo_prompt, ''
+
+  # --------------------------------------------
   # Setting defaults
   # --------------------------------------------
   set :uploads_path, "wp-content/uploads"
@@ -43,7 +58,7 @@ configuration.load do
       run "mkdir -p #{shared_path}/cache"
 
       # set correct permissions
-      run "chmod -R 777 #{shared_path}/*"
+      run "#{try_sudo} chmod -R 777 #{shared_path}/*"
     end
 
     desc "[internal] Touches up the released code. This is called by update_code after the basic deploy finishes."
@@ -96,7 +111,7 @@ configuration.load do
 
     desc "Protect system files"
     task :protect, :except => { :no_release => true } do
-      run "chmod 440 #{latest_release}/wp-config.php*"
+      run "#{try_sudo} chmod 440 #{latest_release}/wp-config.php*"
     end
   end
 
