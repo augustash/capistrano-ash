@@ -58,7 +58,7 @@ configuration.load do
       run "mkdir -p #{shared_path}/cache"
 
       # set correct permissions
-      run "chmod -R 777 #{shared_path}/*"
+      run "#{try_sudo} chmod -R 777 #{shared_path}/*"
     end
 
     desc "[internal] Touches up the released code. This is called by update_code after the basic deploy finishes."
@@ -111,7 +111,7 @@ configuration.load do
 
     desc "Protect system files"
     task :protect, :except => { :no_release => true } do
-      run "chmod 440 #{latest_release}/wp-config.php*"
+      run "#{try_sudo} chmod 440 #{latest_release}/wp-config.php*"
     end
   end
 
