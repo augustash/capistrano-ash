@@ -118,6 +118,20 @@ configuration.load do
     end
   end
 
+  namespace :compass do
+    desc "Compile SASS stylesheets and upload to remote server"
+    task :default do
+      # optional way to skip compiling of stylesheets and just upload them to the servers
+      skip_compass_compile = fetch(:skip_compass_compile, false)
+
+      compass.compile unless skip_compass_compile
+      compass.upload_stylesheets
+      # fixperms for skin directory instead of the whole application (faster deploys)
+      set_perms_dirs("#{latest_release}/skin")
+      set_perms_files("#{latest_release}/skin")
+    end
+  end
+
   # --------------------------------------------
   # Magento specific tasks
   # --------------------------------------------
