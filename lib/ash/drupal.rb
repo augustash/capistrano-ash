@@ -60,6 +60,7 @@ configuration.load do
   # before/after callbacks not firing for 'deploy:symlink'
   # or 'deploy:create_symlink'
   after "deploy", "drupal:symlink"
+  after "drupal:symlink_config_file", "drupal:run_makefiles"
   after "drupal:symlink","drupal:protect"
   after "drupal:symlink", "drupal:clearcache"
   before "drupal:clearcache", "compass"
@@ -196,6 +197,27 @@ configuration.load do
           else
             logger.important "Failed to symlink the settings.php file in #{drupal_app_site_dir} because an unknown pattern was used"
         end
+      end
+    end
+
+    desc "Run drush make files to update core and contributed modules"
+    task :run_makefiles, :roles => :web do
+      makefiles = fetch(:drush_makefiles, nil)
+      begin
+        case true
+        when makefiles.is_a?(NilClass)
+          logger.info "Skipping `drush:run_makefiles` because no makefiles were defined"
+        when makefiles.is_a?(String)
+          run "cd #{latest_release} && #{drush_bin} make #{latest_release}/#{drush_makefiles} -y"
+        when makefiles.is_a?(Array)
+          makefiles.each do |makefile|
+            run "cd #{latest_release} && #{drush_bin} make #{latest_release}/#{makefile} -y"
+          end
+        else
+          logger.important "Failed to run drush make files because `:drush_makefiles` was neither a string nor an array. You can correct this by setting `:drush_makefiles` as such: `set :drush_makefiles, 'ash_core.make'`. Just replace with the appropriate name or filepath to a drush make file."
+        end
+      rescue Exception => e
+        logger.important e.message
       end
     end
 
