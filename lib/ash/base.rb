@@ -164,7 +164,7 @@ configuration.load do
               # adding a chown -R method to fix permissions on the directory
               # this should help with issues related to permission denied
               # as in issues #28 and #30
-              run "#{try_sudo} chown -R #{user}:#{user} #{dir}" if remote_dir_exists?(dir)
+              run "chown -R #{user}:#{user} #{dir}" if remote_dir_exists?(dir)
 
               set_perms_dirs(dir)
               set_perms_files(dir)

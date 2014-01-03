@@ -27,7 +27,7 @@ configuration.load do
   # to just using `sudo` due to the concatenation in the sudo method.
   #
   # This assumes that you have set up your SSH user to have passwordless sudo
-  # setup for common commands (e.g., mv, cp, ln, mkdir, chown, chmod, rm, etc.)
+  # setup for common commands (e.g., chmod, rm, rsync, etc.)
   #
   # (see: https://github.com/capistrano/capistrano/blob/legacy-v2/lib/capistrano/configuration/actions/invocation.rb#L229-L237)
   set :sudo_prompt, ''
@@ -97,7 +97,7 @@ configuration.load do
       # remove shared directories
       multisites.each_pair do |folder, url|
         if folder != url
-          try_sudo "mv #{latest_release}/sites/#{folder} #{latest_release}/sites/#{url}"
+          run "mv #{latest_release}/sites/#{folder} #{latest_release}/sites/#{url}"
         end
         try_sudo "rm -Rf #{latest_release}/sites/#{url}/files"
       end

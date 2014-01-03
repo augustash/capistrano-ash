@@ -27,7 +27,7 @@ configuration.load do
   # to just using `sudo` due to the concatenation in the sudo method.
   #
   # This assumes that you have set up your SSH user to have passwordless sudo
-  # setup for common commands (e.g., mv, cp, ln, mkdir, chown, chmod, rm, etc.)
+  # setup for common commands (e.g., chmod, rm, rsync, etc.)
   #
   # (see: https://github.com/capistrano/capistrano/blob/legacy-v2/lib/capistrano/configuration/actions/invocation.rb#L229-L237)
   set :sudo_prompt, ''
@@ -180,7 +180,7 @@ configuration.load do
 
     desc "Clear the Magento Cache"
     task :cc, :roles => [:web, :app], :except => { :no_release => true } do
-      try_sudo "chown -R #{user}:#{user} #{shared_path}/var/*"
+      run "chown -R #{user}:#{user} #{shared_path}/var/*"
       magento.purge_cache
     end
 
