@@ -59,6 +59,13 @@ configuration.load do
   # phpMyAdmin version
   set :pma_version,       "3.4.5"
 
+  # FIX capistrano 2.15.4+ use of `try_sudo` with capture commands (shouldn't need sudo for `ls` and `cat` commands)
+  _cset(:releases)          { capture("ls -x #{releases_path}",           :except => { :no_release => true }).split.sort }
+  _cset(:current_revision)  { capture("cat #{current_path}/REVISION",     :except => { :no_release => true }).chomp }
+  _cset(:latest_revision)   { capture("cat #{current_release}/REVISION",  :except => { :no_release => true }).chomp }
+  _cset(:previous_revision) { capture("cat #{previous_release}/REVISION", :except => { :no_release => true }).chomp if previous_release }
+
+
   # Backups Path
   _cset(:backups_path)      { File.join(deploy_to, "backups") }
   _cset(:tmp_backups_path)  { File.join("#{backups_path}", "tmp") }
