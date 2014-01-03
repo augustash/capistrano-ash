@@ -62,8 +62,8 @@ configuration.load do
   after "deploy", "drupal:symlink"
   after "drupal:symlink_config_file", "drupal:run_makefiles"
   after "drupal:symlink","drupal:protect"
+  after "drupal:symlink", "compass"
   after "drupal:symlink", "drupal:clearcache"
-  before "drupal:clearcache", "compass"
   after "deploy", "deploy:cleanup"
 
   # --------------------------------------------
