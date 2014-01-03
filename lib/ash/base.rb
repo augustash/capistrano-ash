@@ -275,7 +275,7 @@ EOF
       task cmd.to_sym, :roles => :web do
 
         nginx_cmd   = fetch(:nginx_init_command, "/etc/init.d/nginx")
-        phpfpm_cmd  = fetch(:phpfpm_init_command, "/etc/init.d/php-fpm")
+        phpfpm_cmd  = fetch(:phpfpm_init_command, "/etc/init.d/php5-fpm")
 
         run "#{try_sudo} #{nginx_cmd} #{cmd}"
         run "#{try_sudo} #{phpfpm_cmd} #{cmd}"
