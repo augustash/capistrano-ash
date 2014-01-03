@@ -42,7 +42,7 @@ configuration.load do
   _cset :dump_options,    "--single-transaction --create-options --quick --triggers --routines"
 
   # Source Control
-  set :group_writable,    false
+  # set :group_writable,    false
   set :use_sudo,          false
   set :scm,               :git
   set :git_enable_submodules, 1 if fetch(:scm, :git)
