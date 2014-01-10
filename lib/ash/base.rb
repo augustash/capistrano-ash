@@ -484,7 +484,7 @@ EOF
         ignore_tables     = fetch(:ignore_tables, [])
         ignore_tables_str = ''
 
-        ignore_tables.each{ |t| ignore_tables_str << "--ignore-table='example'.'" + t + "' " }
+        ignore_tables.each{ |t| ignore_tables_str << "--ignore-table='#{dbname}'.'" + t + "' " }
 
         # dump the database for the proper environment
         run "#{mysqldump} #{dump_options} -u #{dbuser} -p #{dbname} #{ignore_tables_str} | gzip -c --best > #{filename}" do |ch, stream, out|
