@@ -278,12 +278,12 @@ EOF
   # NGINX tasks
   # --------------------------------------------
   namespace :nginx do
-    %w(start stop restart status).each do |cmd|
+    %w(start stop restart reload status).each do |cmd|
       desc "[internal] - #{cmd.upcase} nginx and php-fpm"
       task cmd.to_sym, :roles => :web do
 
-        nginx_cmd   = fetch(:nginx_init_command, "/etc/init.d/nginx")
-        phpfpm_cmd  = fetch(:phpfpm_init_command, "/etc/init.d/php5-fpm")
+        nginx_cmd   = fetch(:nginx_init_command, "service nginx")
+        phpfpm_cmd  = fetch(:phpfpm_init_command, "service php5-fpm")
 
         run "#{try_sudo} #{nginx_cmd} #{cmd}"
         run "#{try_sudo} #{phpfpm_cmd} #{cmd}"
