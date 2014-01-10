@@ -39,7 +39,8 @@ configuration.load do
   set :dbpass,            proc{Capistrano::CLI.password_prompt("Database password for '#{dbuser}':")}
   set :dbname,            proc{text_prompt("Database name: ")}
   _cset :mysqldump,       "mysqldump"
-  _cset :dump_options,    "--single-transaction --create-options --quick --triggers --routines"
+  _cset :dump_options,    "--single-transaction --create-options --quick --triggers --routines --force --opt --skip-lock-tables"
+  _cset :ignore_tables,   []
 
   # Source Control
   # set :group_writable,    false
