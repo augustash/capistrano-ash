@@ -38,6 +38,12 @@ configuration.load do
   set :enable_modules, []
   set :disable_modules, %w(Ash_Bar)
 
+
+  # --------------------------------------------
+  # Database/Backup Variables
+  # --------------------------------------------
+  set :ignore_tables, %w(core_cache core_cache_option core_cache_tag core_session log_customer log_quote log_summary log_summary_type log_url log_url_info log_visitor log_visitor_info log_visitor_online enterprise_logging_event enterprise_logging_event_changes index_event index_process_event report_event report_viewed_product_index dataflow_batch_export dataflow_batch_import)
+
   # --------------------------------------------
   # Task chains
   # --------------------------------------------
@@ -234,8 +240,15 @@ configuration.load do
         # define the filename (dump the SQL file directly to the backups directory)
         filename = "#{backups_path}/#{dbname}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
 
+        # ignored db tables
+        ignore_tables     = fetch(:ignore_tables, [])
+        ignore_tables_str = ''
+
+        ignore_tables.each{ |t| ignore_tables_str << "--ignore-table='example'.'" + t + "' " }
+
+
         # dump the database for the proper environment
-        run "#{mysqldump} #{dump_options} -u #{dbuser} -p #{dbname} | gzip -c --best > #{filename}" do |ch, stream, out|
+        run "#{mysqldump} #{dump_options} -u #{dbuser} -p #{dbname} #{ignore_tables_str} | gzip -c --best > #{filename}" do |ch, stream, out|
           ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
         end
       else

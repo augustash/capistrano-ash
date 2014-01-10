@@ -479,8 +479,15 @@ EOF
 
         # define the filename (include the current_path so the dump file will be within the directory)
         filename = "#{tmp_backups_path}/#{release_name}/#{dbname}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
+
+        # ignored db tables
+        ignore_tables     = fetch(:ignore_tables, [])
+        ignore_tables_str = ''
+
+        ignore_tables.each{ |t| ignore_tables_str << "--ignore-table='example'.'" + t + "' " }
+
         # dump the database for the proper environment
-        run "#{mysqldump} #{dump_options} -u #{dbuser} -p #{dbname} | gzip -c --best > #{filename}" do |ch, stream, out|
+        run "#{mysqldump} #{dump_options} -u #{dbuser} -p #{dbname} #{ignore_tables_str} | gzip -c --best > #{filename}" do |ch, stream, out|
             ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
         end
       else
