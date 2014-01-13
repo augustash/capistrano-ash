@@ -44,11 +44,14 @@ configuration.load do
   # --------------------------------------------
   set :ignore_tables, %w(core_cache core_cache_option core_cache_tag core_session log_customer log_quote log_summary log_summary_type log_url log_url_info log_visitor log_visitor_info log_visitor_online enterprise_logging_event enterprise_logging_event_changes index_event index_process_event report_event report_viewed_product_index dataflow_batch_export dataflow_batch_import)
 
+  # don't backup the media and var directories within the root
+  # of Magento project (these are already in the shared directory)
+  set :backup_exclude, %w(media var)
+
   # --------------------------------------------
   # Task chains
   # --------------------------------------------
   after "deploy:setup", "deploy:setup_local"
-  #  after "deploy:setup_shared", "pma:install"
   after "deploy:finalize_update", "magento:activate_config"
   # after "deploy:create_symlink", "magento:symlink"
 
@@ -217,42 +220,6 @@ configuration.load do
         mod_path = "#{latest_release}/app/etc/modules/#{mod_name}"
         # disable the module
         run "perl -pi -e 's/true/false/g' #{mod_path}" if remote_file_exists?("#{mod_path}")
-      end
-    end
-  end
-
-  # --------------------------------------------
-  # Override the base.rb backup tasks
-  # --------------------------------------------
-  namespace :backup do
-    desc "Perform a backup of ONLY database SQL files"
-    task :default do
-      deploy.setup_backup
-      db
-      cleanup
-    end
-
-    desc "Perform a backup of database files"
-    task :db, :roles => :db do
-      if previous_release
-        puts "Backing up the database now and putting dump file in the #{stage}/backups directory"
-
-        # define the filename (dump the SQL file directly to the backups directory)
-        filename = "#{backups_path}/#{dbname}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
-
-        # ignored db tables
-        ignore_tables     = fetch(:ignore_tables, [])
-        ignore_tables_str = ''
-
-        ignore_tables.each{ |t| ignore_tables_str << "--ignore-table='#{dbname}'.'" + t + "' " }
-
-
-        # dump the database for the proper environment
-        run "#{mysqldump} #{dump_options} -u #{dbuser} -p #{dbname} #{ignore_tables_str} | gzip -c --best > #{filename}" do |ch, stream, out|
-          ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
-        end
-      else
-        logger.important "no previous release to backup to; backup of database skipped"
       end
     end
   end
