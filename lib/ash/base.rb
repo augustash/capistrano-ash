@@ -408,9 +408,9 @@ EOF
     desc "Perform a backup of web and database files"
     task :default do
       deploy.setup_backup
-      db
-      web
-      cleanup
+      backup.db
+      backup.web
+      backup.cleanup
     end
 
     desc <<-DESC
