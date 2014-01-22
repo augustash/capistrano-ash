@@ -470,6 +470,7 @@ EOF
       if previous_release
         mysqldump     = fetch(:mysqldump, "mysqldump")
         dump_options  = fetch(:dump_options, "--single-transaction --create-options --quick")
+        dbhost        = fetch(:db_remote_host, 'localhost')
 
         puts "Backing up the database now and putting dump file in the previous release directory"
 
@@ -487,7 +488,7 @@ EOF
         ignore_tables.each{ |t| ignore_tables_str << "--ignore-table='#{dbname}'.'" + t + "' " }
 
         # dump the database for the proper environment
-        run "#{mysqldump} #{dump_options} -u #{dbuser} -p #{dbname} #{ignore_tables_str} | gzip -c --best > #{filename}" do |ch, stream, out|
+        run "#{mysqldump} #{dump_options} -h #{dbhost} -u #{dbuser} -p #{dbname} #{ignore_tables_str} | gzip -c --best > #{filename}" do |ch, stream, out|
             ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
         end
       else
