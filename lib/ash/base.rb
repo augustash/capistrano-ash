@@ -478,18 +478,34 @@ EOF
         # which we'll tarball in the backup:web task
         run "mkdir -p #{tmp_backups_path}/#{release_name}"
 
-        # define the filename (include the current_path so the dump file will be within the directory)
-        filename = "#{tmp_backups_path}/#{release_name}/#{dbname}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
-
+        now = Time.now.to_s.gsub(/ /, "_")
         # ignored db tables
-        ignore_tables     = fetch(:ignore_tables, [])
-        ignore_tables_str = ''
+        ignore_tables = fetch(:ignore_tables, [])
+        if !ignore_tables.empty?
+          ignore_tables_str = ''
+          ignore_tables.each{ |t| ignore_tables_str << "--ignore-table='#{dbname}'.'" + t + "' " }
 
-        ignore_tables.each{ |t| ignore_tables_str << "--ignore-table='#{dbname}'.'" + t + "' " }
+          # define the filenames (include the current_path so the dump file will be within the directory)
+          data_filename       = "#{tmp_backups_path}/#{release_name}/#{dbname}_data_dump-#{now}.sql.gz"
+          structure_filename  = "#{tmp_backups_path}/#{release_name}/#{dbname}_structure_dump-#{now}.sql.gz"
 
-        # dump the database for the proper environment
-        run "#{mysqldump} #{dump_options} -h #{dbhost} -u #{dbuser} -p #{dbname} #{ignore_tables_str} | gzip -c --best > #{filename}" do |ch, stream, out|
-            ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
+          # dump the database structure for the proper environment
+          run "#{mysqldump} --single-transaction --create-options --quick --triggers --routines --no-data -h #{dbhost} -u #{dbuser} -p #{dbname} | gzip -c --best > #{structure_filename}" do |ch, stream, out|
+              ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
+          end
+
+          # dump the database data for the proper environment
+          run "#{mysqldump} #{dump_options} -h #{dbhost} -u #{dbuser} -p #{dbname} #{ignore_tables_str} | gzip -c --best > #{data_filename}" do |ch, stream, out|
+              ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
+          end
+        else
+          # define the filename (include the current_path so the dump file will be within the directory)
+          filename = "#{tmp_backups_path}/#{release_name}/#{dbname}_dump-#{now}.sql.gz"
+
+          # dump the database for the proper environment
+          run "#{mysqldump} #{dump_options} -h #{dbhost} -u #{dbuser} -p #{dbname} | gzip -c --best > #{filename}" do |ch, stream, out|
+              ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
+          end
         end
       else
         logger.important "no previous release to backup to; backup of database skipped"
