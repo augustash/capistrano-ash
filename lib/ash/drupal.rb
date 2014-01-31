@@ -151,11 +151,40 @@ configuration.load do
         # which we'll tarball in the backup:web task
         run "mkdir -p #{tmp_backups_path}/#{release_name}"
 
-        multisites.each_pair do |folder, url|
-          # define the filename (include the current_path so the dump file will be within the directory)
-          filename = "#{tmp_backups_path}/#{release_name}/#{folder}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
-          # dump the database for the proper environment
-          run "#{drush_bin} -l #{url} -r #{current_path} sql-dump | gzip -c --best > #{filename}"
+        now = Time.now.to_s.gsub(/ /, "_")
+        # ignored db tables
+        ignore_tables = fetch(:ignore_tables, [])
+        if !ignore_tables.empty?
+          if ignore_tables.is_a?(String)
+            ignore_tables_str = ignore_tables
+          else
+            ignore_tables_str = ignore_tables.join(',')
+          end
+
+          # define the filenames (include the current_path so the dump file will be within the directory)
+          data_filename       = "#{tmp_backups_path}/#{release_name}/#{dbname}_data_dump-#{now}.sql.gz"
+          structure_filename  = "#{tmp_backups_path}/#{release_name}/#{dbname}_structure_dump-#{now}.sql.gz"
+
+          if ignore_tables_str == 'common'
+            skip_tables_opt = "--skip-tables-key"
+          else
+            skip_tables_opt = "--skip-tables-list"
+          end
+
+          multisites.each_pair do |folder, url|
+            # dump the database structure for the proper environment (structure dump of common tables)
+            run "#{drush_bin} -l #{url} -r #{current_path} sql-dump --structure-tables-key=common | gzip -c --best > #{structure_filename}"
+
+            # dump the database data for the proper environment
+            run "#{drush_bin} -l #{url} -r #{current_path} sql-dump #{skip_tabls_opt}=#{ignore_tables_str} | gzip -c --best > #{data_filename}"
+          end
+        else
+          multisites.each_pair do |folder, url|
+            # define the filename (include the current_path so the dump file will be within the directory)
+            filename = "#{tmp_backups_path}/#{release_name}/#{folder}_dump-#{now}.sql.gz"
+            # dump the database for the proper environment (skip standard tables)
+            run "#{drush_bin} -l #{url} -r #{current_path} sql-dump --skip-tables-key=common | gzip -c --best > #{filename}"
+          end
         end
       else
         logger.important "no previous release to backup; backup of database skipped"
