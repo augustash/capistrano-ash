@@ -153,7 +153,9 @@ configuration.load do
 
         now = Time.now.to_s.gsub(/ /, "_")
         # ignored db tables
-        ignore_tables = fetch(:ignore_tables, [])
+        ignore_tables         = fetch(:ignore_tables, [])
+        structure_tables_key  = fetch(:structure_tables_key, 'structure-tables')
+
         if !ignore_tables.empty?
           if ignore_tables.is_a?(String)
             ignore_tables_str = ignore_tables
@@ -173,7 +175,7 @@ configuration.load do
 
           multisites.each_pair do |folder, url|
             # dump the database structure for the proper environment (structure dump of common tables)
-            run "#{drush_bin} -l #{url} -r #{current_path} sql-dump --structure-tables-key=common | gzip -c --best > #{structure_filename}"
+            run "#{drush_bin} -l #{url} -r #{current_path} sql-dump --structure-tables-key=#{structure_tables_key} | gzip -c --best > #{structure_filename}"
 
             # dump the database data for the proper environment
             run "#{drush_bin} -l #{url} -r #{current_path} sql-dump #{skip_tabls_opt}=#{ignore_tables_str} | gzip -c --best > #{data_filename}"
