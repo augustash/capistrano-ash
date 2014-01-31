@@ -466,7 +466,7 @@ EOF
     end
 
     desc "Perform a backup of database files"
-    task :db, :roles => :db do
+    task :db, :roles => :web do
       if previous_release
         mysqldump     = fetch(:mysqldump, "mysqldump")
         dump_options  = fetch(:dump_options, "--single-transaction --create-options --quick")

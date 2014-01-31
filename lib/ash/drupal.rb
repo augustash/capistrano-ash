@@ -143,7 +143,7 @@ configuration.load do
 
   namespace :backup do
     desc "Perform a backup of database files"
-    task :db, :roles => :db do
+    task :db, :roles => :web do
       if previous_release
         puts "Backing up the database now and putting dump file in the previous release directory"
 
