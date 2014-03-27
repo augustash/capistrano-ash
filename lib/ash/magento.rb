@@ -27,7 +27,7 @@ configuration.load do
   # to just using `sudo` due to the concatenation in the sudo method.
   #
   # This assumes that you have set up your SSH user to have passwordless sudo
-  # setup for common commands (e.g., mv, cp, ln, mkdir, chown, chmod, rm, etc.)
+  # setup for common commands (e.g., chmod, rm, rsync, etc.)
   #
   # (see: https://github.com/capistrano/capistrano/blob/legacy-v2/lib/capistrano/configuration/actions/invocation.rb#L229-L237)
   set :sudo_prompt, ''
@@ -38,11 +38,20 @@ configuration.load do
   set :enable_modules, []
   set :disable_modules, %w(Ash_Bar)
 
+
+  # --------------------------------------------
+  # Database/Backup Variables
+  # --------------------------------------------
+  set :ignore_tables, %w(core_cache core_cache_option core_cache_tag core_session log_customer log_quote log_summary log_summary_type log_url log_url_info log_visitor log_visitor_info log_visitor_online enterprise_logging_event enterprise_logging_event_changes index_event index_process_event report_event report_viewed_product_index dataflow_batch_export dataflow_batch_import)
+
+  # don't backup the media and var directories within the root
+  # of Magento project (these are already in the shared directory)
+  set :backup_exclude, %w(media var)
+
   # --------------------------------------------
   # Task chains
   # --------------------------------------------
   after "deploy:setup", "deploy:setup_local"
-  #  after "deploy:setup_shared", "pma:install"
   after "deploy:finalize_update", "magento:activate_config"
   # after "deploy:create_symlink", "magento:symlink"
 
@@ -180,7 +189,7 @@ configuration.load do
 
     desc "Clear the Magento Cache"
     task :cc, :roles => [:web, :app], :except => { :no_release => true } do
-      try_sudo "chown -R #{user}:#{user} #{shared_path}/var/*"
+      run "chown -R #{user}:#{user} #{shared_path}/var/*"
       magento.purge_cache
     end
 
@@ -211,35 +220,6 @@ configuration.load do
         mod_path = "#{latest_release}/app/etc/modules/#{mod_name}"
         # disable the module
         run "perl -pi -e 's/true/false/g' #{mod_path}" if remote_file_exists?("#{mod_path}")
-      end
-    end
-  end
-
-  # --------------------------------------------
-  # Override the base.rb backup tasks
-  # --------------------------------------------
-  namespace :backup do
-    desc "Perform a backup of ONLY database SQL files"
-    task :default do
-      deploy.setup_backup
-      db
-      cleanup
-    end
-
-    desc "Perform a backup of database files"
-    task :db, :roles => :db do
-      if previous_release
-        puts "Backing up the database now and putting dump file in the #{stage}/backups directory"
-
-        # define the filename (dump the SQL file directly to the backups directory)
-        filename = "#{backups_path}/#{dbname}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
-
-        # dump the database for the proper environment
-        run "#{mysqldump} #{dump_options} -u #{dbuser} -p #{dbname} | gzip -c --best > #{filename}" do |ch, stream, out|
-          ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
-        end
-      else
-        logger.important "no previous release to backup to; backup of database skipped"
       end
     end
   end
