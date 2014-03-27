@@ -18,7 +18,7 @@ begin
 
     # Net-SSH issues
     # see https://github.com/capistrano/capistrano/issues/927
-    gemspac.add_dependency('net-ssh', '2.7.0')
+    gemspec.add_dependency('net-ssh', '2.7.0')
 
   end
 rescue LoadError
