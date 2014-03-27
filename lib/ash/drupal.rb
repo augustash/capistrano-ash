@@ -27,7 +27,7 @@ configuration.load do
   # to just using `sudo` due to the concatenation in the sudo method.
   #
   # This assumes that you have set up your SSH user to have passwordless sudo
-  # setup for common commands (e.g., mv, cp, ln, mkdir, chown, chmod, rm, etc.)
+  # setup for common commands (e.g., chmod, rm, rsync, etc.)
   #
   # (see: https://github.com/capistrano/capistrano/blob/legacy-v2/lib/capistrano/configuration/actions/invocation.rb#L229-L237)
   set :sudo_prompt, ''
@@ -62,8 +62,8 @@ configuration.load do
   after "deploy", "drupal:symlink"
   after "drupal:symlink_config_file", "drupal:run_makefiles"
   after "drupal:symlink","drupal:protect"
+  after "drupal:symlink", "compass"
   after "drupal:symlink", "drupal:clearcache"
-  before "drupal:clearcache", "compass"
   after "deploy", "deploy:cleanup"
 
   # --------------------------------------------
@@ -97,7 +97,7 @@ configuration.load do
       # remove shared directories
       multisites.each_pair do |folder, url|
         if folder != url
-          try_sudo "mv #{latest_release}/sites/#{folder} #{latest_release}/sites/#{url}"
+          run "mv #{latest_release}/sites/#{folder} #{latest_release}/sites/#{url}"
         end
         try_sudo "rm -Rf #{latest_release}/sites/#{url}/files"
       end
@@ -143,7 +143,7 @@ configuration.load do
 
   namespace :backup do
     desc "Perform a backup of database files"
-    task :db, :roles => :db do
+    task :db, :roles => :web do
       if previous_release
         puts "Backing up the database now and putting dump file in the previous release directory"
 
@@ -151,11 +151,42 @@ configuration.load do
         # which we'll tarball in the backup:web task
         run "mkdir -p #{tmp_backups_path}/#{release_name}"
 
-        multisites.each_pair do |folder, url|
-          # define the filename (include the current_path so the dump file will be within the directory)
-          filename = "#{tmp_backups_path}/#{release_name}/#{folder}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
-          # dump the database for the proper environment
-          run "#{drush_bin} -l #{url} -r #{current_path} sql-dump | gzip -c --best > #{filename}"
+        now = Time.now.to_s.gsub(/ /, "_")
+        # ignored db tables
+        ignore_tables         = fetch(:ignore_tables, [])
+        structure_tables_key  = fetch(:structure_tables_key, 'structure-tables')
+
+        if !ignore_tables.empty?
+          if ignore_tables.is_a?(String)
+            ignore_tables_str = ignore_tables
+          else
+            ignore_tables_str = ignore_tables.join(',')
+          end
+
+          # define the filenames (include the current_path so the dump file will be within the directory)
+          data_filename       = "#{tmp_backups_path}/#{release_name}/#{dbname}_data_dump-#{now}.sql.gz"
+          structure_filename  = "#{tmp_backups_path}/#{release_name}/#{dbname}_structure_dump-#{now}.sql.gz"
+
+          if ignore_tables_str == 'common'
+            skip_tables_opt = "--skip-tables-key"
+          else
+            skip_tables_opt = "--skip-tables-list"
+          end
+
+          multisites.each_pair do |folder, url|
+            # dump the database structure for the proper environment (structure dump of common tables)
+            run "#{drush_bin} -l #{url} -r #{current_path} sql-dump --structure-tables-key=#{structure_tables_key} | gzip -c --best > #{structure_filename}"
+
+            # dump the database data for the proper environment
+            run "#{drush_bin} -l #{url} -r #{current_path} sql-dump #{skip_tabls_opt}=#{ignore_tables_str} | gzip -c --best > #{data_filename}"
+          end
+        else
+          multisites.each_pair do |folder, url|
+            # define the filename (include the current_path so the dump file will be within the directory)
+            filename = "#{tmp_backups_path}/#{release_name}/#{folder}_dump-#{now}.sql.gz"
+            # dump the database for the proper environment (skip standard tables)
+            run "#{drush_bin} -l #{url} -r #{current_path} sql-dump --skip-tables-key=common | gzip -c --best > #{filename}"
+          end
         end
       else
         logger.important "no previous release to backup; backup of database skipped"

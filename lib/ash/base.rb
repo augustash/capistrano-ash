@@ -39,10 +39,11 @@ configuration.load do
   set :dbpass,            proc{Capistrano::CLI.password_prompt("Database password for '#{dbuser}':")}
   set :dbname,            proc{text_prompt("Database name: ")}
   _cset :mysqldump,       "mysqldump"
-  _cset :dump_options,    "--single-transaction --create-options --quick --triggers --routines"
+  _cset :dump_options,    "--single-transaction --create-options --quick --triggers --routines --force --opt --skip-lock-tables"
+  _cset :ignore_tables,   []
 
   # Source Control
-  set :group_writable,    false
+  # set :group_writable,    false
   set :use_sudo,          false
   set :scm,               :git
   set :git_enable_submodules, 1 if fetch(:scm, :git)
@@ -58,6 +59,13 @@ configuration.load do
 
   # phpMyAdmin version
   set :pma_version,       "3.4.5"
+
+  # FIX capistrano 2.15.4+ use of `try_sudo` with capture commands (shouldn't need sudo for `ls` and `cat` commands)
+  set(:releases) { capture("ls -x #{releases_path}", :except => { :no_release => true }).split.sort }
+  set(:current_revision) { capture("cat #{current_path}/REVISION", :except => { :no_release => true }).chomp }
+  set(:latest_revision) { capture("cat #{current_release}/REVISION", :except => { :no_release => true }).chomp }
+  set(:previous_revision) { capture("cat #{previous_release}/REVISION", :except => { :no_release => true }).chomp if previous_release }
+
 
   # Backups Path
   _cset(:backups_path)      { File.join(deploy_to, "backups") }
@@ -110,7 +118,8 @@ configuration.load do
       dirs = [deploy_to, releases_path, shared_path]
       dirs += shared_children.map { |d| File.join(shared_path, d.split('/').last) }
       run "mkdir -p #{dirs.join(' ')}"
-      run "chmod 755 #{dirs.join(' ')}" if fetch(:group_writable, true)
+      run "#{try_sudo} chmod g+w #{dirs.join(' ')}" if fetch(:group_writable, true)
+      # run "chmod 755 #{dirs.join(' ')}" if fetch(:group_writable, true)
     end
 
     desc "Setup shared application directories and permissions after initial setup"
@@ -129,6 +138,33 @@ configuration.load do
     task :symlink, :except => { :no_release => true } do
       logger.important "[Deprecation Warning] This API has changed, please hook `deploy:create_symlink` instead of `deploy:symlink`."
       create_symlink
+    end
+
+    desc <<-DESC
+      Updates the symlink to the most recently deployed version. Capistrano works \
+      by putting each new release of your application in its own directory. When \
+      you deploy a new version, this task's job is to update the `current' symlink \
+      to point at the new version. You will rarely need to call this task \
+      directly; instead, use the `deploy' task (which performs a complete \
+      deploy, including `restart') or the 'update' task (which does everything \
+      except `restart').
+
+      AAI OVERRIDES:
+      removes use of try_sudo with symlink command because we use try_sudo \
+      (set :use_sudo, true) for several common deploy-related tasks, but symlinks \
+      are not part of the tasks that truly require sudo privileges
+
+    DESC
+    task :create_symlink, :except => { :no_release => true } do
+      on_rollback do
+        if previous_release
+          run "#{try_sudo} rm -f #{current_path}; ln -s #{previous_release} #{current_path}; true"
+        else
+          logger.important "no previous release to rollback to, rollback of symlink skipped"
+        end
+      end
+
+      run "#{try_sudo} rm -f #{current_path} && ln -s #{latest_release} #{current_path}"
     end
 
     desc <<-DESC
@@ -164,7 +200,7 @@ configuration.load do
               # adding a chown -R method to fix permissions on the directory
               # this should help with issues related to permission denied
               # as in issues #28 and #30
-              run "#{try_sudo} chown -R #{user}:#{user} #{dir}" if remote_dir_exists?(dir)
+              run "chown -R #{user}:#{user} #{dir}" if remote_dir_exists?(dir)
 
               set_perms_dirs(dir)
               set_perms_files(dir)
@@ -175,6 +211,26 @@ configuration.load do
           end
 
           run "#{try_sudo} rm -rf #{directories}", :hosts => [channel[:server]]
+        end
+      end
+    end
+
+    namespace :rollback do
+      desc <<-DESC
+        [internal] Points the current symlink at the previous revision.
+        This is called by the rollback sequence, and should rarely (if
+        ever) need to be called directly.
+
+        AAI OVERRIDES:
+        removes use of try_sudo with symlink command because we use try_sudo \
+        (set :use_sudo, true) for several common deploy-related tasks, but symlinks \
+        are not part of the tasks that truly require sudo privileges
+      DESC
+      task :revision, :except => { :no_release => true } do
+        if previous_release
+          run "#{try_sudo} rm #{current_path}; ln -s #{previous_release} #{current_path}"
+        else
+          abort "could not rollback the code because there is no prior release"
         end
       end
     end
@@ -270,12 +326,12 @@ EOF
   # NGINX tasks
   # --------------------------------------------
   namespace :nginx do
-    %w(start stop restart status).each do |cmd|
+    %w(start stop restart reload status).each do |cmd|
       desc "[internal] - #{cmd.upcase} nginx and php-fpm"
       task cmd.to_sym, :roles => :web do
 
-        nginx_cmd   = fetch(:nginx_init_command, "/etc/init.d/nginx")
-        phpfpm_cmd  = fetch(:phpfpm_init_command, "/etc/init.d/php-fpm")
+        nginx_cmd   = fetch(:nginx_init_command, "service nginx")
+        phpfpm_cmd  = fetch(:phpfpm_init_command, "service php5-fpm")
 
         run "#{try_sudo} #{nginx_cmd} #{cmd}"
         run "#{try_sudo} #{phpfpm_cmd} #{cmd}"
@@ -400,9 +456,9 @@ EOF
     desc "Perform a backup of web and database files"
     task :default do
       deploy.setup_backup
-      db
-      web
-      cleanup
+      backup.db
+      backup.web
+      backup.cleanup
     end
 
     desc <<-DESC
@@ -458,10 +514,11 @@ EOF
     end
 
     desc "Perform a backup of database files"
-    task :db, :roles => :db do
+    task :db, :roles => :web do
       if previous_release
         mysqldump     = fetch(:mysqldump, "mysqldump")
         dump_options  = fetch(:dump_options, "--single-transaction --create-options --quick")
+        dbhost        = fetch(:db_remote_host, 'localhost')
 
         puts "Backing up the database now and putting dump file in the previous release directory"
 
@@ -469,11 +526,34 @@ EOF
         # which we'll tarball in the backup:web task
         run "mkdir -p #{tmp_backups_path}/#{release_name}"
 
-        # define the filename (include the current_path so the dump file will be within the directory)
-        filename = "#{tmp_backups_path}/#{release_name}/#{dbname}_dump-#{Time.now.to_s.gsub(/ /, "_")}.sql.gz"
-        # dump the database for the proper environment
-        run "#{mysqldump} #{dump_options} -u #{dbuser} -p #{dbname} | gzip -c --best > #{filename}" do |ch, stream, out|
-            ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
+        now = Time.now.to_s.gsub(/ /, "_")
+        # ignored db tables
+        ignore_tables = fetch(:ignore_tables, [])
+        if !ignore_tables.empty?
+          ignore_tables_str = ''
+          ignore_tables.each{ |t| ignore_tables_str << "--ignore-table='#{dbname}'.'" + t + "' " }
+
+          # define the filenames (include the current_path so the dump file will be within the directory)
+          data_filename       = "#{tmp_backups_path}/#{release_name}/#{dbname}_data_dump-#{now}.sql.gz"
+          structure_filename  = "#{tmp_backups_path}/#{release_name}/#{dbname}_structure_dump-#{now}.sql.gz"
+
+          # dump the database structure for the proper environment
+          run "#{mysqldump} --single-transaction --create-options --quick --triggers --routines --no-data -h #{dbhost} -u #{dbuser} -p #{dbname} | gzip -c --best > #{structure_filename}" do |ch, stream, out|
+              ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
+          end
+
+          # dump the database data for the proper environment
+          run "#{mysqldump} #{dump_options} -h #{dbhost} -u #{dbuser} -p #{dbname} #{ignore_tables_str} | gzip -c --best > #{data_filename}" do |ch, stream, out|
+              ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
+          end
+        else
+          # define the filename (include the current_path so the dump file will be within the directory)
+          filename = "#{tmp_backups_path}/#{release_name}/#{dbname}_dump-#{now}.sql.gz"
+
+          # dump the database for the proper environment
+          run "#{mysqldump} #{dump_options} -h #{dbhost} -u #{dbuser} -p #{dbname} | gzip -c --best > #{filename}" do |ch, stream, out|
+              ch.send_data "#{dbpass}\n" if out =~ /^Enter password:/
+          end
         end
       else
         logger.important "no previous release to backup to; backup of database skipped"
