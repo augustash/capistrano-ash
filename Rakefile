@@ -12,9 +12,9 @@ begin
     gemspec.authors     = ["August Ash"]
     # Gem dependencies
     gemspec.add_dependency('capistrano', '~> 2.15.5')
-    gemspec.add_dependency('capistrano-ext')
-    gemspec.add_dependency('railsless-deploy')
-    gemspec.add_dependency('capistrano_colors')
+    gemspec.add_dependency('capistrano-ext', '~> 1.2')
+    gemspec.add_dependency('railsless-deploy', '~> 1.1')
+    gemspec.add_dependency('capistrano_colors', '~> 0.5')
 
     # Net-SSH issues
     # see https://github.com/capistrano/capistrano/issues/927

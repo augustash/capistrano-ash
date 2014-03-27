@@ -40,23 +40,22 @@ Gem::Specification.new do |s|
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<capistrano>, ["~> 2.15.5"])
-      s.add_runtime_dependency(%q<capistrano-ext>, [">= 0"])
-      s.add_runtime_dependency(%q<railsless-deploy>, [">= 0"])
-      s.add_runtime_dependency(%q<capistrano_colors>, [">= 0"])
+      s.add_dependency(%q<capistrano-ext>, ["~> 1.2"])
+      s.add_dependency(%q<railsless-deploy>, ["~> 1.1"])
+      s.add_dependency(%q<capistrano_colors>, ["~> 0.5"])
       s.add_dependency(%q<net-ssh>, ['2.7.0'])
   else
       s.add_dependency(%q<capistrano>, ["~> 2.15.5"])
-      s.add_dependency(%q<capistrano-ext>, [">= 0"])
-      s.add_dependency(%q<railsless-deploy>, [">= 0"])
-      s.add_dependency(%q<capistrano_colors>, [">= 0"])
+      s.add_dependency(%q<capistrano-ext>, ["~> 1.2"])
+      s.add_dependency(%q<railsless-deploy>, ["~> 1.1"])
+      s.add_dependency(%q<capistrano_colors>, ["~> 0.5"])
       s.add_dependency(%q<net-ssh>, ['2.7.0'])
     end
   else
     s.add_dependency(%q<capistrano>, ["~> 2.15.5"])
-    s.add_dependency(%q<capistrano-ext>, [">= 0"])
-    s.add_dependency(%q<railsless-deploy>, [">= 0"])
-    s.add_dependency(%q<capistrano_colors>, [">= 0"])
+      s.add_dependency(%q<capistrano-ext>, ["~> 1.2"])
+      s.add_dependency(%q<railsless-deploy>, ["~> 1.1"])
+      s.add_dependency(%q<capistrano_colors>, ["~> 0.5"])
     s.add_dependency(%q<net-ssh>, ['2.7.0'])
   end
 end
-
