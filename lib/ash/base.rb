@@ -118,7 +118,8 @@ configuration.load do
       dirs = [deploy_to, releases_path, shared_path]
       dirs += shared_children.map { |d| File.join(shared_path, d.split('/').last) }
       run "mkdir -p #{dirs.join(' ')}"
-      run "chmod 755 #{dirs.join(' ')}" if fetch(:group_writable, true)
+      run "#{try_sudo} chmod g+w #{dirs.join(' ')}" if fetch(:group_writable, true)
+      # run "chmod 755 #{dirs.join(' ')}" if fetch(:group_writable, true)
     end
 
     desc "Setup shared application directories and permissions after initial setup"
@@ -137,6 +138,33 @@ configuration.load do
     task :symlink, :except => { :no_release => true } do
       logger.important "[Deprecation Warning] This API has changed, please hook `deploy:create_symlink` instead of `deploy:symlink`."
       create_symlink
+    end
+
+    desc <<-DESC
+      Updates the symlink to the most recently deployed version. Capistrano works \
+      by putting each new release of your application in its own directory. When \
+      you deploy a new version, this task's job is to update the `current' symlink \
+      to point at the new version. You will rarely need to call this task \
+      directly; instead, use the `deploy' task (which performs a complete \
+      deploy, including `restart') or the 'update' task (which does everything \
+      except `restart').
+
+      AAI OVERRIDES:
+      removes use of try_sudo with symlink command because we use try_sudo \
+      (set :use_sudo, true) for several common deploy-related tasks, but symlinks \
+      are not part of the tasks that truly require sudo privileges
+
+    DESC
+    task :create_symlink, :except => { :no_release => true } do
+      on_rollback do
+        if previous_release
+          run "#{try_sudo} rm -f #{current_path}; ln -s #{previous_release} #{current_path}; true"
+        else
+          logger.important "no previous release to rollback to, rollback of symlink skipped"
+        end
+      end
+
+      run "#{try_sudo} rm -f #{current_path} && ln -s #{latest_release} #{current_path}"
     end
 
     desc <<-DESC
@@ -183,6 +211,26 @@ configuration.load do
           end
 
           run "#{try_sudo} rm -rf #{directories}", :hosts => [channel[:server]]
+        end
+      end
+    end
+
+    namespace :rollback do
+      desc <<-DESC
+        [internal] Points the current symlink at the previous revision.
+        This is called by the rollback sequence, and should rarely (if
+        ever) need to be called directly.
+
+        AAI OVERRIDES:
+        removes use of try_sudo with symlink command because we use try_sudo \
+        (set :use_sudo, true) for several common deploy-related tasks, but symlinks \
+        are not part of the tasks that truly require sudo privileges
+      DESC
+      task :revision, :except => { :no_release => true } do
+        if previous_release
+          run "#{try_sudo} rm #{current_path}; ln -s #{previous_release} #{current_path}"
+        else
+          abort "could not rollback the code because there is no prior release"
         end
       end
     end
