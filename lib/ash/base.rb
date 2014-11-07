@@ -301,7 +301,9 @@ EOF
       end
 
       # echo the file out into the root of the latest_release directory
-      put robots_txt, "#{latest_release}/robots.txt"
+      if "#{stage}" != 'production' or !remote_file_exists?("#{latest_release}/robots.txt")
+        put robots_txt, "#{latest_release}/robots.txt"
+      end
     end
   end
 
